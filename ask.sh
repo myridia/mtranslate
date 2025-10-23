@@ -1,7 +1,6 @@
 DB_NAME=dbsql1
 DB_USER=dbsql1
 DB_PASSWORD=passpass
-DATE=$(date +"%F")
 
 
 echo -e "I'm ask.sh. What you like to do?, enter a Task Id from list below: \n"
@@ -27,7 +26,6 @@ if [ "$task" = "1" ]; then
     echo "http://127.0.0.1:81/"        
 
     
-    
 elif [ "$task" = "2" ]; then
     echo "... ${task} -- Run Docker Page"
     cd pages/dockers
@@ -51,8 +49,7 @@ elif [ "$task" = "4" ]; then
 
 elif [ "$task" = "5" ]; then
     echo "...${task}"
-    docker  run -i --rm --net=host  salamander1/mysqldump --verbose -h db -u "${DB_NAME}" -p"${DB_PASSWORD}"  "${DB_NAME}" | gzip > "./test/init/${DB_NAME}-${DATE}.sql.gz"
-    docker  run -i --rm --net=host  salamander1/mysqldump --verbose -h db -u "${DB_NAME}" -p"${DB_PASSWORD}"  "${DB_NAME}" | gzip > "./test/init/${DB_NAME}.sql.gz"
+    docker  run -i --rm --net=dockers_workgroup  salamander1/mysqldump --verbose -h "10.5.0.2" -u "${DB_NAME}" -p"${DB_PASSWORD}"  "${DB_NAME}" | gzip > "dockers/init/${DB_NAME}.sql.gz"
 
     
 else
