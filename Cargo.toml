@@ -20,9 +20,8 @@ hmac = {version ="*"}
 sha2 = {version ="*"}
 base64 = {version ="*"}
 urldecode = {version ="*"}
-lettre = {version ="*"}
 deep-translator = {version="*"}
-
+mysql = {version ="*"}
 
 [lib]
 name = "libs"

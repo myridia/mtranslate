@@ -21,10 +21,12 @@ if [ "$task" = "1" ]; then
     echo "...${task}"
     cd dockers
     docker-compose up -d
-    echo "Open:"
-    echo "http://127.0.0.1:5800"    
-    echo "Visit if you set your host:"
-    echo "https://app.local"
+    echo "API:"
+    echo "http://127.0.0.1:5800"
+    echo "phpmyadmin"
+    echo "http://127.0.0.1:81/"        
+
+    
     
 elif [ "$task" = "2" ]; then
     echo "... ${task} -- Run Docker Page"
@@ -36,7 +38,7 @@ elif [ "$task" = "2" ]; then
     
 elif [ "$task" = "3" ]; then
     echo "...${task}"    
-    docker rm ---force `docker ps -qa`
+    docker rm `docker ps -qa`
     docker volume rm $(docker volume ls -q --force --filter dangling=true)
     docker network prune --force
     
