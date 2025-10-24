@@ -36,13 +36,13 @@ elif [ "$task" = "2" ]; then
     
 elif [ "$task" = "3" ]; then
     echo "...${task}"    
-    docker rm `docker ps -qa`
-    docker volume rm $(docker volume ls -q --force --filter dangling=true)
+    docker rm `docker ps -qa`    
+    docker volume rm $(docker volume ls -q --filter dangling=true)
     docker network prune --force
     
 elif [ "$task" = "4" ]; then
     echo "...${task}"
-    docker rm --force `docker ps -qa`
+    docker rm  `docker ps -qa`
     docker volume rm $(docker volume ls -q --filter dangling=true)
     docker network prune
     docker rmi --force `docker images -aq`    
