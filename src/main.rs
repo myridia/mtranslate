@@ -1,6 +1,6 @@
 use axum::{
     http::{HeaderValue, Method},
-    routing::{get, post},
+    routing::get,
     Router,
 };
 

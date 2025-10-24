@@ -1,16 +1,14 @@
 use axum::{extract::Query, http::header::HeaderMap, response::IntoResponse, Json};
 use deeptrans::{Engine, Translator};
-use hex_literal::hex;
 use mysql::prelude::*;
 use mysql::*;
 use sha2::{Digest, Sha256};
-use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
 
 #[derive(Debug)]
 struct Atrans {
     target_value: String,
+    target_hash: String,
 }
 pub async fn hash8(s: &str) -> String {
     let result = Sha256::digest(s);
@@ -21,22 +19,28 @@ pub async fn hash8(s: &str) -> String {
 
 pub async fn test(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
     // http://127.0.0.1:8889/test
-    let mut target_value = "".to_string();
+    let mut return_value = "".to_string();
+    let mut return_target = "".to_string();
+    let mut return_source = "".to_string();
+    let mut req_hash = "".to_string();
+    let mut return_hash = "".to_string();
 
     if params.contains_key("t") && params.contains_key("s") && params.contains_key("v") {
         let database_url = "mysql://dbsql1:passpass@localhost:3306/dbsql1";
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
         let source_value = &params["v"];
         let source_hash = hash8(source_value).await;
-        let mut target_hash = "";
+
         let source_name = &params["s"];
         let target_name = &params["t"];
+        return_target = target_name.to_string();
+        return_source = source_name.to_string();
         let request_hash = hash8(&format!(
             "{0}_{1}_{2}",
             source_name, target_name, source_value
         ))
         .await;
-
+        req_hash = request_hash.clone();
         let mut conn = pool
             .get_conn()
             .expect("Failed to get a connection from the pool");
@@ -44,6 +48,7 @@ pub async fn test(Query(params): Query<HashMap<String, String>>) -> impl IntoRes
         let sql0 = format!(
             "SELECT
          t.text AS target_value
+         ,t.hash AS target_hash
          FROM a_source_target  as a
          LEFT JOIN {}  AS t
          ON a.target_id = t.id
@@ -53,17 +58,24 @@ pub async fn test(Query(params): Query<HashMap<String, String>>) -> impl IntoRes
         );
 
         let atrans: Vec<Atrans> = conn
-            .query_map(sql0, |(target_value,)| Atrans { target_value })
+            .query_map(sql0, |(target_value, target_hash)| Atrans {
+                target_value,
+                target_hash,
+            })
             .expect("Failed to fetch data");
 
         if atrans.is_empty() == false {
-            target_value = atrans[0].target_value.to_string();
+            let target_value = atrans[0].target_value.to_string();
+            let target_hash = atrans[0].target_hash.to_string();
+            return_value = target_value;
+            return_hash = target_hash;
         } else {
             let trans = Translator::with_engine(source_name, target_name, Engine::Google);
             let _target_value = trans.translate(source_value).await.unwrap();
             let target_value: &str = _target_value.as_str().unwrap_or_default();
+            return_value = target_value.to_string();
             let target_hash = hash8(target_value).await;
-
+            return_hash = target_hash.clone();
             let sql = format!(
                 "INSERT IGNORE INTO {0} (hash,text) VALUES (?,?)",
                 source_name
@@ -101,8 +113,11 @@ pub async fn test(Query(params): Query<HashMap<String, String>>) -> impl IntoRes
     }
     let r = serde_json::json!([
         {
-            "source": "en",
-            "target": "th",
+            "target_value": return_value,
+            "source": return_source,
+            "target": return_target,
+            "req_hash": req_hash,
+            "return_hash": return_hash,
         }
     ]);
     Json(r)
