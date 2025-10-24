@@ -1,35 +1,36 @@
 use axum::{extract::Query, http::header::HeaderMap, response::IntoResponse, Json};
 use deeptrans::{Engine, Translator};
+use hex_literal::hex;
 use mysql::prelude::*;
 use mysql::*;
+use sha2::{Digest, Sha256};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-//use axum_client_ip::XRealIp as ClientIp;
-//use std::net::SocketAddr;
 
 #[derive(Debug)]
 struct Atrans {
     target_value: String,
 }
 pub async fn hash8(s: &str) -> String {
-    let mut hasher = DefaultHasher::new();
-    s.hash(&mut hasher);
-    let hash = hasher.finish();
-    format!("{:016x}", hash)[..8].to_string()
+    let result = Sha256::digest(s);
+    let x = format!("{:x}", result).to_string();
+    let hash = &x.get(x.len() - 8..);
+    return hash.unwrap_or_default().to_string();
 }
 
 pub async fn test(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
     // http://127.0.0.1:8889/test
     let mut target_value = "".to_string();
+
     if params.contains_key("t") && params.contains_key("s") && params.contains_key("v") {
         let database_url = "mysql://dbsql1:passpass@localhost:3306/dbsql1";
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
-        let source_value = "hello";
+        let source_value = &params["v"];
         let source_hash = hash8(source_value).await;
         let mut target_hash = "";
-        let source_name = "en";
-        let target_name = "th";
+        let source_name = &params["s"];
+        let target_name = &params["t"];
         let request_hash = hash8(&format!(
             "{0}_{1}_{2}",
             source_name, target_name, source_value

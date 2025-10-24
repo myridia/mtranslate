@@ -22,7 +22,7 @@ base64 = {version ="*"}
 urldecode = {version ="*"}
 deep-translator = {version="*"}
 mysql = {version ="*"}
-
+hex-literal = {version ="*"}
 [lib]
 name = "libs"
 path = "src/lib.rs"
