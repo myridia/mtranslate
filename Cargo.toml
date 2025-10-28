@@ -23,6 +23,7 @@ urldecode = {version ="*"}
 deep-translator = {version="*"}
 mysql = {version ="*"}
 hex-literal = {version ="*"}
+sanitize_html = {version ="*"}
 [lib]
 name = "libs"
 path = "src/lib.rs"

@@ -4,6 +4,8 @@ use mysql::prelude::*;
 use mysql::*;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use sanitize_html::sanitize_str;
+use sanitize_html::rules::predefined::DEFAULT;
 
 #[derive(Debug)]
 struct Atrans {
@@ -27,10 +29,18 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
     let mut msg = "".to_string();
 
     if params.contains_key("t") && params.contains_key("s") && params.contains_key("v") {
+
+
         let codes: Vec<&str> = env!("codes").split(',').collect();
         let database_url = "mysql://dbsql1:passpass@localhost:3306/dbsql1";
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
-        let source_value = &params["v"];
+        //let source_value = &params["v"];	
+        let v = &params["v"];
+        let sanitize: String = sanitize_str(&DEFAULT, v).unwrap().to_string();
+        let source_value = &sanitize;	
+
+
+
         let source_hash = hash8(source_value).await;
 
         let source_name = &params["s"];
