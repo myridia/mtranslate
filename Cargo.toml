@@ -1,5 +1,5 @@
 [package]
-name = "email_gateway"
+name = "mtranslate"
 version = "0.1.0"
 edition = "2024"
 

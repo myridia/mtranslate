@@ -31,10 +31,7 @@ async fn main() {
 
     println!("Server started successfully");
     let host = "0.0.0.0:8089";
-    println!("http://{}/test", host);
-    println!("http://127.0.0.1:8089/test");
-    println!("https://email.local/test");
-    println!("https://api.grallator.com/test");
+    println!("http://{}/test?s=en&t=th&v=hello", host);
 
     let listener = tokio::net::TcpListener::bind(host).await.unwrap();
     axum::serve(
