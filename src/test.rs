@@ -24,7 +24,7 @@ pub async fn test(Query(params): Query<HashMap<String, String>>) -> impl IntoRes
     let mut return_source = "".to_string();
     let mut req_hash = "".to_string();
     let mut return_hash = "".to_string();
-
+    let mut msg = "".to_string();
     if params.contains_key("t") && params.contains_key("s") && params.contains_key("v") {
         let database_url = "mysql://dbsql1:passpass@localhost:3306/dbsql1";
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
@@ -110,6 +110,8 @@ pub async fn test(Query(params): Query<HashMap<String, String>>) -> impl IntoRes
                 .expect("Failed to insert data");
             }
         }
+    } else {
+        msg = "...missing v,s or t parameter, example: https://translate.myridia.com?s=en&t=cn&v=hello".to_string();
     }
     let r = serde_json::json!([
         {
@@ -118,6 +120,7 @@ pub async fn test(Query(params): Query<HashMap<String, String>>) -> impl IntoRes
             "target": return_target,
             "req_hash": req_hash,
             "return_hash": return_hash,
+            "msg": msg,
         }
     ]);
     Json(r)
