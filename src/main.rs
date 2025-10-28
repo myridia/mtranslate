@@ -4,7 +4,9 @@ use axum::{
     Router,
 };
 
-use libs::test::*;
+use libs::help::help;
+use libs::test::test;
+use libs::translate::translate;
 use std::net::SocketAddr;
 use tower_http::cors::CorsLayer;
 
@@ -25,6 +27,8 @@ async fn main() {
         .allow_methods([Method::GET, Method::OPTIONS, Method::POST]);
 
     let app = Router::new()
+        .route("/", get(translate))
+        .route("/help", get(help))
         .route("/test", get(test))
         .layer(cors)
         .layer(CorsLayer::permissive());
