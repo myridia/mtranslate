@@ -24,6 +24,7 @@ deep-translator = {version="*"}
 mysql = {version ="*"}
 hex-literal = {version ="*"}
 sanitize_html = {version ="*"}
+random-number = {version ="*"}
 [lib]
 name = "libs"
 path = "src/lib.rs"

@@ -2,11 +2,12 @@ use axum::{extract::Query, response::IntoResponse, Json};
 use deeptrans::{Engine, Translator};
 use mysql::prelude::*;
 use mysql::*;
+use random_number::random;
 use sanitize_html::rules::predefined::DEFAULT;
 use sanitize_html::sanitize_str;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-
+use tokio::time::{sleep, Duration};
 #[derive(Debug)]
 struct Atrans {
     target_value: String,
@@ -38,7 +39,8 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
             env!("db_port"),
             env!("db_name")
         );
-        println!("{:?}", database_url);
+        let n: i32 = random!(1000, 5000);
+        println!("{:?}", n);
 
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
 
@@ -91,6 +93,7 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
                 return_value = target_value;
                 return_hash = target_hash;
             } else {
+                sleep(Duration::from_millis(random!(1000, 5000))).await;
                 let trans = Translator::with_engine(source_name, target_name, Engine::Google);
                 let _target_value = trans.translate(source_value).await.unwrap();
                 let target_value: &str = _target_value.as_str().unwrap_or_default();
@@ -135,7 +138,7 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
             msg = "...wrong v,s or t parameter, example: https://translate.myridia.com?s=en&t=th&v=hello -  not more than 1000 characters".to_string();
         }
     } else {
-        msg = "...missing v,s or t parameter, example: https://translate.myridia.com?s=en&t=th&v=hello".to_string();
+        msg = "...missing v,s or t parameter, example: https://mtranslate.myridia.com?s=en&t=th&v=hello".to_string();
     }
     let r = serde_json::json!([
         {
