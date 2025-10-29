@@ -2,10 +2,10 @@ use axum::{extract::Query, response::IntoResponse, Json};
 use deeptrans::{Engine, Translator};
 use mysql::prelude::*;
 use mysql::*;
+use sanitize_html::rules::predefined::DEFAULT;
+use sanitize_html::sanitize_str;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use sanitize_html::sanitize_str;
-use sanitize_html::rules::predefined::DEFAULT;
 
 #[derive(Debug)]
 struct Atrans {
@@ -29,17 +29,15 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
     let mut msg = "".to_string();
 
     if params.contains_key("t") && params.contains_key("s") && params.contains_key("v") {
-
-
         let codes: Vec<&str> = env!("codes").split(',').collect();
         let database_url = "mysql://dbsql1:passpass@localhost:3306/dbsql1";
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
-        //let source_value = &params["v"];	
+
         let v = &params["v"];
         let sanitize: String = sanitize_str(&DEFAULT, v).unwrap().to_string();
-        let source_value = &sanitize;	
+        let source_value = &sanitize;
 
-
+        println!("{:?}", source_value.len());
 
         let source_hash = hash8(source_value).await;
 
@@ -47,7 +45,10 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
         let target_name = &params["t"];
         return_target = target_name.to_string();
         return_source = source_name.to_string();
-        if codes.contains(&source_name.as_str()) && codes.contains(&target_name.as_str()) {
+        if codes.contains(&source_name.as_str())
+            && codes.contains(&target_name.as_str())
+            && source_value.len() < 1000
+        {
             let request_hash = hash8(&format!(
                 "{0}_{1}_{2}",
                 source_name, target_name, source_value
@@ -124,7 +125,7 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
                 }
             }
         } else {
-            msg = "...wrong v,s or t parameter, example: https://translate.myridia.com?s=en&t=th&v=hello".to_string();
+            msg = "...wrong v,s or t parameter, example: https://translate.myridia.com?s=en&t=th&v=hello -  not more than 1000 characters".to_string();
         }
     } else {
         msg = "...missing v,s or t parameter, example: https://translate.myridia.com?s=en&t=th&v=hello".to_string();

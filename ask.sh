@@ -5,7 +5,7 @@ DB_PASSWORD=passpass
 
 echo -e "I'm ask.sh. What you like to do?, enter a Task Id from list below: \n"
 echo -e "TaskID\t Description"
-echo -e "1\t Run - Docker Test Enviroment "
+echo -e "1\t Run - Docker Test Enviroment and API"
 echo -e "2\t Run - Docker Page "
 echo -e "3\t Clean Docker - Clean the docker containers and volumes "
 echo -e "4\t Clean All - Clean the docker containers and volumes and images "
@@ -24,7 +24,8 @@ if [ "$task" = "1" ]; then
     echo "http://127.0.0.1:5800"
     echo "phpmyadmin"
     echo "http://127.0.0.1:81/"        
-
+    cd ../
+    make
     
 elif [ "$task" = "2" ]; then
     echo "... ${task} -- Run Docker Page"

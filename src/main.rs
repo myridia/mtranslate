@@ -35,7 +35,7 @@ async fn main() {
 
     println!("Server started successfully");
     let host = "0.0.0.0:8089";
-    println!("http://{}/test?s=en&t=th&v=hello", host);
+    println!("http://{}?s=en&t=th&v=hello", host);
 
     let listener = tokio::net::TcpListener::bind(host).await.unwrap();
     axum::serve(
