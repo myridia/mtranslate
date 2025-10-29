@@ -30,14 +30,21 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
 
     if params.contains_key("t") && params.contains_key("s") && params.contains_key("v") {
         let codes: Vec<&str> = env!("codes").split(',').collect();
-        let database_url = "mysql://dbsql1:passpass@localhost:3306/dbsql1";
+        let database_url: &str = &format!(
+            "mysql://{0}:{1}@{2}:{3}/{4}",
+            env!("db_user"),
+            env!("db_pass"),
+            env!("db_host"),
+            env!("db_port"),
+            env!("db_name")
+        );
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
 
         let v = &params["v"];
         let sanitize: String = sanitize_str(&DEFAULT, v).unwrap().to_string();
         let source_value = &sanitize;
 
-        println!("{:?}", source_value.len());
+        //    println!("{:?}", source_value.len());
 
         let source_hash = hash8(source_value).await;
 
