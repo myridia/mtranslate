@@ -5,6 +5,6 @@ dev:
 
 release:
 	git pull;\
-	cargo build --release 
+	cargo build --release --config .cargo/config-release.toml 
 default: dev
 

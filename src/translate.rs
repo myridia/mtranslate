@@ -38,13 +38,13 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
             env!("db_port"),
             env!("db_name")
         );
+        println!("{:?}", database_url);
+
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
 
         let v = &params["v"];
         let sanitize: String = sanitize_str(&DEFAULT, v).unwrap().to_string();
         let source_value = &sanitize;
-
-        //    println!("{:?}", source_value.len());
 
         let source_hash = hash8(source_value).await;
 
