@@ -25,6 +25,7 @@ mysql = {version ="*"}
 hex-literal = {version ="*"}
 sanitize_html = {version ="*"}
 random-number = {version ="*"}
+toml = {version ="*"}
 [lib]
 name = "libs"
 path = "src/lib.rs"
