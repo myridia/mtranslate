@@ -26,19 +26,15 @@ struct Xtrans {
 pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
     // http://127.0.0.1:8889/test
 
-    let mut source_name = "";
+    let mut source_lang = "";
     let mut source_hash = "".to_string();
     let mut source_value = "";
     let mut source_id = "";
 
-    let mut target_name = "";
+    let mut target_lang = "";
     let mut target_hash = "".to_string();
     let mut target_value = "".to_string();
     let mut target_id = "";
-
-    let mut return_value = "".to_string();
-    let mut return_target = "".to_string();
-    let mut return_source = "".to_string();
 
     let mut req_hash = "".to_string();
     let mut return_hash = "".to_string();
@@ -65,39 +61,36 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
         let sanitize: &str = &sanitize_str(&DEFAULT, &params["v"]).unwrap();
         source_value = sanitize;
         source_hash = hash8(source_value).await;
-        source_name = &params["s"];
-        target_name = &params["t"];
+        source_lang = &params["s"];
+        target_lang = &params["t"];
 
-        if codes.contains(&source_name) && codes.contains(&target_name) && source_value.len() < 1000
+        if codes.contains(&source_lang) && codes.contains(&target_lang) && source_value.len() < 1000
         {
             request_hash = hash8(&format!(
                 "{0}_{1}_{2}",
-                source_name, target_name, source_value
+                source_lang, target_lang, source_value
             ))
             .await;
             req_hash = request_hash.clone();
 
-            let atrans = get_target(&pool, &target_name, &request_hash).await;
+            let atrans = get_target(&pool, &target_lang, &request_hash).await;
 
             if atrans.is_some() == true {
                 println!("...translated already");
                 target_value = atrans.clone().unwrap()[0].clone();
                 target_hash = atrans.clone().unwrap()[1].clone();
-                //return_value = target_value;
-                //return_hash = target_hash;
             } else {
                 let wait: u64 = random!(2000, 7000);
                 println!("wait: {0}", wait);
-                println!("source_name: {0}", source_name);
-                println!("source_hash: {0}", source_hash);
+                println!("source_lang: {0}", source_lang);
 
-                let sr = get_id_hash(pool, &source_name, &source_hash).await;
+                let sr = get_id_hash(pool, &source_lang, &source_hash).await;
                 if sr.is_some() {
                     source_id = &sr.unwrap()[0];
                 }
 
                 sleep(Duration::from_millis(wait)).await;
-                let trans = Translator::with_engine(source_name, target_name, Engine::Google);
+                let trans = Translator::with_engine(source_lang, target_lang, Engine::Google);
                 let _target_value = trans.translate(source_value).await.unwrap();
                 target_value = _target_value.as_str().unwrap_or_default().to_string();
                 target_hash = hash8(&target_value).await;
@@ -142,8 +135,6 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
                         .expect("Failed to insert data");
                     }  */
                 } else {
-                    return_value = "".to_string();
-                    return_hash = "".to_string();
                     msg = "source cannot be translated".to_string();
                 }
             }
@@ -158,11 +149,11 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
     let r = serde_json::json!([
         {
             "target_value": target_value,
-            "target_name": target_name,
-            "source_name": source_name,
+            "target_lang": target_lang,
+            "source_lang": source_lang,
 
-            //"req_hash": req_hash,
-            //"return_hash": return_hash,
+            "req_hash": req_hash,
+            "return_hash": return_hash,
             "msg": msg,
         }
     ]);
