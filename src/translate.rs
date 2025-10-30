@@ -22,45 +22,6 @@ struct Xtrans {
     id: i64,
     value: String,
 }
-pub async fn hash8(s: &str) -> String {
-    let result = Sha256::digest(s);
-    let x = format!("{:x}", result).to_string();
-    let _hash = &x.get(x.len() - 8..);
-    let hash = _hash.unwrap_or_default().to_string();
-    return hash;
-}
-
-pub async fn get_id_hash(pool: Pool, name: &str, hash: &str) -> Option<Vec<String>> {
-    println!("...fn get_id_hash");
-    let mut v: Vec<String> = vec![];
-    let mut conn = pool
-        .get_conn()
-        .expect("Failed to get a connection from the pool");
-    let sql = format!(
-        "SELECT
-         s.id AS id
-         ,s.text AS source_value
-         FROM {0} as s
-         where s.hash = '{1}'
-         LIMIT 1",
-        &name, &hash
-    );
-
-    //println!("{}", sql);
-
-    let r: Vec<Xtrans> = conn
-        .query_map(sql, |(id, value)| Xtrans { id, value })
-        .expect("Failed to fetch data");
-
-    if !r.is_empty() {
-        v.push(r[0].id.to_string());
-        v.push(r[0].value.to_string());
-        //println!("{:?}", v);
-        return Some(v);
-    }
-
-    return None;
-}
 
 pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
     // http://127.0.0.1:8889/test
@@ -115,34 +76,13 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
             ))
             .await;
             req_hash = request_hash.clone();
-            let mut conn = pool
-                .get_conn()
-                .expect("Failed to get a connection from the pool");
 
-            let sql0 = format!(
-                "SELECT
-         t.text AS target_value
-         ,t.hash AS target_hash
-         FROM a_source_target  as a
-         LEFT JOIN {0}  AS t
-         ON a.target_id = t.id
-         where a.hash = '{1}'
-         LIMIT 1",
-                &target_name, request_hash
-            );
+            let atrans = get_target(&pool, &target_name, &request_hash).await;
 
-            //println!("{}", sql0);
-            let atrans: Vec<Atrans> = conn
-                .query_map(sql0, |(target_value, target_hash)| Atrans {
-                    target_value,
-                    target_hash,
-                })
-                .expect("Failed to fetch data");
-
-            if atrans.is_empty() == false {
+            if atrans.is_some() == true {
                 println!("...translated already");
-                target_value = atrans[0].target_value.to_string();
-                target_hash = atrans[0].target_hash.to_string();
+                target_value = atrans.clone().unwrap()[0].clone();
+                target_hash = atrans.clone().unwrap()[1].clone();
                 //return_value = target_value;
                 //return_hash = target_hash;
             } else {
@@ -227,4 +167,88 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
         }
     ]);
     Json(r)
+}
+
+pub async fn hash8(s: &str) -> String {
+    let result = Sha256::digest(s);
+    let x = format!("{:x}", result).to_string();
+    let _hash = &x.get(x.len() - 8..);
+    let hash = _hash.unwrap_or_default().to_string();
+    return hash;
+}
+
+pub async fn get_id_hash(pool: Pool, name: &str, hash: &str) -> Option<Vec<String>> {
+    println!("...fn get_id_hash");
+    let mut v: Vec<String> = vec![];
+    let mut conn = pool
+        .get_conn()
+        .expect("Failed to get a connection from the pool");
+    let sql = format!(
+        "SELECT
+         s.id AS id
+         ,s.text AS source_value
+         FROM {0} as s
+         where s.hash = '{1}'
+         LIMIT 1",
+        &name, &hash
+    );
+
+    //println!("{}", sql);
+
+    let r: Vec<Xtrans> = conn
+        .query_map(sql, |(id, value)| Xtrans { id, value })
+        .expect("Failed to fetch data");
+
+    if !r.is_empty() {
+        v.push(r[0].id.to_string());
+        v.push(r[0].value.to_string());
+        //println!("{:?}", v);
+        return Some(v);
+    }
+
+    return None;
+}
+
+pub async fn get_target(pool: &Pool, target_name: &str, request_hash: &str) -> Option<Vec<String>> {
+    println!("...fn get_target");
+
+    //println!("{}", sql0);
+
+    let mut v: Vec<String> = vec![];
+    let mut conn = pool
+        .get_conn()
+        .expect("Failed to get a connection from the pool");
+    let sql0 = format!(
+        "SELECT
+         t.text AS target_value
+         ,t.hash AS target_hash
+         FROM a_source_target  as a
+         LEFT JOIN {0}  AS t
+         ON a.target_id = t.id
+         where a.hash = '{1}'
+         LIMIT 1",
+        &target_name, request_hash
+    );
+
+    //println!("{}", sql);
+    let r: Vec<Atrans> = conn
+        .query_map(sql0, |(target_value, target_hash)| Atrans {
+            target_value,
+            target_hash,
+        })
+        .expect("Failed to fetch data");
+
+    /*
+    let r: Vec<Xtrans> = conn
+        .query_map(sql, |(id, value)| Xtrans { id, value })
+        .expect("Failed to fetch data");
+    */
+    if !r.is_empty() {
+        v.push(r[0].target_value.to_string());
+        v.push(r[0].target_hash.to_string());
+        //println!("{:?}", v);
+        return Some(v);
+    }
+
+    return None;
 }
