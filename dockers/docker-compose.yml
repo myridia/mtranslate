@@ -1,0 +1,44 @@
+version: '3'
+services:
+  db:
+    image: mariadb    
+    container_name: db
+    volumes:
+      - db_mt:/var/lib/mysql
+      #- "./log/mysql:/var/log/mysql"
+      - "./init/:/docker-entrypoint-initdb.d"    
+    ports:
+     - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: passpass
+      MYSQL_USER: dbsql1
+      MYSQL_PASSWORD: passpass
+      MYSQL_DATABASE: dbsql1
+    networks:
+      workgroup:
+        ipv4_address: "10.5.0.2"
+
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "81:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: dbsql1
+      PMA_PASSWORD: passpass
+    networks:
+      workgroup:
+        ipv4_address: "10.5.0.3"
+      
+volumes:
+  db_mt:
+
+networks:
+  workgroup:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1

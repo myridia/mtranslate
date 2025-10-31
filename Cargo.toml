@@ -1,0 +1,33 @@
+[package]
+name = "mtranslate"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = { version = "*" }
+axum_cors = { version = "*"}
+axum-client-ip = { version = "*"}
+chrono = { version = "*", features = ["serde"] }
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+json = "*"
+tokio = { version = "*", features = ["full"] }
+tower-http = { version = "*", features = ["cors"] }
+uuid = { version = "*", features = ["v4", "serde"] }
+envy = { version = "*"}
+jwt = {version ="*"}
+hmac = {version ="*"}
+sha2 = {version ="*"}
+base64 = {version ="*"}
+urldecode = {version ="*"}
+deep-translator = {version="*"}
+mysql = {version ="*"}
+hex-literal = {version ="*"}
+sanitize_html = {version ="*"}
+random-number = {version ="*"}
+toml = {version ="*"}
+[lib]
+name = "libs"
+path = "src/lib.rs"
+
+

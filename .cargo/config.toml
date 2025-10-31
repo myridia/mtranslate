@@ -1,0 +1,8 @@
+[env]
+db_name ="dbsql1"
+db_user="dbsql1"
+db_pass="passpass"
+db_host="localhost"
+db_port="3306"
+codes = "en,th,af,sq,am,ar,hy,az,eu,be,bn,bs,bg,ca,ceb,ny,zh-CN,zh-TW,co,hr,cs,da,nl,eo,et,tl,fi,fr,fy,gl,ka,de,el,gu,ht,ha,haw,iw,hi,hmn,hu,is,ig,ga,it,ja,jw,kn,kk,km,ko,ku,ky,lo,la,lv,lt,lb,mk,mg,ms,ml,mt,mi,mr,mn,my,ne,no,or,ps,fa,pl,pt,pa,ro,ru,sm,gd,sr,st,sn,sd,si,sk,sl,so,es,su,sw,sv,tg,ta,te,tr,uk,ur,uz,vi,cy,xh,yi,yo,zu"
+
