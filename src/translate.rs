@@ -25,20 +25,19 @@ struct Xtrans {
 
 pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
     // http://127.0.0.1:8889/test
-
+    let wait: u64 = random!(2000, 7000);
     let mut source_lang = "";
     let mut source_hash = "".to_string();
     let mut source_value = "";
-    let mut source_id = "";
+    let mut source_id = 0;
 
     let mut target_lang = "";
     let mut target_hash = "".to_string();
     let mut target_value = "".to_string();
-    let mut target_id = "";
+    let mut target_id = 0;
 
-    let mut req_hash = "".to_string();
-    let mut return_hash = "".to_string();
     let mut request_hash = "".to_string();
+    let mut return_hash = "".to_string();
 
     let mut msg = "".to_string();
 
@@ -71,69 +70,64 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
                 source_lang, target_lang, source_value
             ))
             .await;
-            req_hash = request_hash.clone();
 
-            let atrans = get_target(&pool, &target_lang, &request_hash).await;
+            let already_translated = get_target(&pool, &target_lang, &request_hash).await;
 
-            if atrans.is_some() == true {
+            if already_translated.is_some() == true {
                 println!("...translated already");
-                target_value = atrans.clone().unwrap()[0].clone();
-                target_hash = atrans.clone().unwrap()[1].clone();
+                target_value = already_translated.clone().unwrap()[0].clone();
+                target_hash = already_translated.clone().unwrap()[1].clone();
             } else {
-                let wait: u64 = random!(2000, 7000);
                 println!("wait: {0}", wait);
-                println!("source_lang: {0}", source_lang);
 
-                let sr = get_id_hash(pool, &source_lang, &source_hash).await;
+                let sr = get_id(&pool, &source_lang, &source_hash).await;
                 if sr.is_some() {
-                    source_id = &sr.unwrap()[0];
+                    source_id = sr.unwrap()[0].parse().unwrap();
                 }
 
-                sleep(Duration::from_millis(wait)).await;
-                let trans = Translator::with_engine(source_lang, target_lang, Engine::Google);
-                let _target_value = trans.translate(source_value).await.unwrap();
-                target_value = _target_value.as_str().unwrap_or_default().to_string();
-                target_hash = hash8(&target_value).await;
+                let gr = google_translate(source_lang, target_lang, source_value, wait).await;
+                if gr.is_some() {
+                    //println!("{:?}", gr);
+                    //println!("{0}", target_hash);
+                    target_value = gr.clone().unwrap()[0].to_string();
+                    target_hash = gr.unwrap()[1].to_string();
+                    if source_hash != target_hash {
+                        println!("source_id: {}", source_id);
+                        println!("source_hash: {}", source_hash);
+                        println!("target_hash: {}", target_hash);
 
-                //println!("{0}", source_hash);
-                //println!("{0}", target_hash);
-                if source_hash != target_hash {
+                        let tr = get_id(&pool, &target_lang, &target_hash).await;
+                        if tr.is_some() {
+                            target_id = tr.unwrap()[0].parse().unwrap();
+                        }
+                        if source_id == 0 {
+                            let r =
+                                insert_lang(&pool, source_lang, source_value, &source_hash).await;
+                            if r.is_some() {
+                                source_id = r.unwrap();
+                            }
+                        }
 
-                    /*
-                    let sql = format!(
-                        "INSERT IGNORE INTO {0} (hash,text) VALUES (?,?)",
-                        source_name
-                    );
-                    conn.exec_drop(sql, (&source_hash, &source_value))
-                        .expect("Failed to insert data");
-                    let last_source_id = conn.last_insert_id();
+                        if target_id == 0 {
+                            let r =
+                                insert_lang(&pool, target_lang, &target_value, &target_hash).await;
+                            if r.is_some() {
+                                target_id = r.unwrap();
+                            }
+                        }
 
-                    let sql = format!(
-                        "INSERT IGNORE INTO {0} (hash,text) VALUES (?,?)",
-                        target_name
-                    );
-
-                    conn.exec_drop(sql, (&target_hash, &target_value))
-                        .expect("Failed to insert data");
-                    let last_target_id = conn.last_insert_id();
-                    //println!("{}", last_source_id);
-                    println!("{}", last_target_id);
-
-                    if last_source_id != 0 && last_target_id != 0 {
-                        let sql = format!("INSERT IGNORE INTO a_source_target (hash, source_name, target_name, source_id, target_id) VALUES (?,?,?,?,?)");
-                        println!("{}", sql);
-                        conn.exec_drop(
-                            sql,
-                            (
+                        if source_id != 0 && target_id != 0 {
+                            let id = insert_linking(
+                                &pool,
                                 &request_hash,
-                                &source_name,
-                                &target_name,
-                                &last_source_id,
-                                &last_target_id,
-                            ),
-                        )
-                        .expect("Failed to insert data");
-                    }  */
+                                source_lang,
+                                target_lang,
+                                source_id,
+                                target_id,
+                            )
+                            .await;
+                        }
+                    }
                 } else {
                     msg = "source cannot be translated".to_string();
                 }
@@ -149,11 +143,10 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
     let r = serde_json::json!([
         {
             "target_value": target_value,
+            "target_hash": target_hash,
             "target_lang": target_lang,
             "source_lang": source_lang,
-
-            "req_hash": req_hash,
-            "return_hash": return_hash,
+            "request_hash": request_hash,
             "msg": msg,
         }
     ]);
@@ -168,8 +161,8 @@ pub async fn hash8(s: &str) -> String {
     return hash;
 }
 
-pub async fn get_id_hash(pool: Pool, name: &str, hash: &str) -> Option<Vec<String>> {
-    println!("...fn get_id_hash");
+pub async fn get_id(pool: &Pool, name: &str, hash: &str) -> Option<Vec<String>> {
+    println!("...fn get_id for {0} - {1}", name, hash);
     let mut v: Vec<String> = vec![];
     let mut conn = pool
         .get_conn()
@@ -241,5 +234,78 @@ pub async fn get_target(pool: &Pool, target_name: &str, request_hash: &str) -> O
         return Some(v);
     }
 
+    return None;
+}
+
+pub async fn google_translate(
+    source_lang: &str,
+    target_lang: &str,
+    source_value: &str,
+    wait: u64,
+) -> Option<Vec<String>> {
+    println!("...fn google_translate");
+    let mut v: Vec<String> = vec![];
+    sleep(Duration::from_millis(wait)).await;
+    let trans = Translator::with_engine(source_lang, target_lang, Engine::Google);
+    let r = trans.translate(source_value).await;
+    if r.is_ok() {
+        let value = r.unwrap().as_str().unwrap_or_default().to_string();
+        let hash = hash8(&value).await;
+        v.push(value);
+        v.push(hash);
+        return Some(v);
+    }
+    return None;
+}
+
+pub async fn insert_lang(pool: &Pool, lang: &str, value: &str, hash: &str) -> Option<u64> {
+    println!("...fn insert_lang  {0} | {1} | {2}", lang, value, hash);
+    let mut conn = pool
+        .get_conn()
+        .expect("Failed to get a connection from the pool");
+    let sql = format!("INSERT IGNORE INTO {0} (hash,text) VALUES (?,?)", lang);
+    conn.exec_drop(sql, (&hash, &value))
+        .expect("Failed to insert data");
+    let id: u64 = conn.last_insert_id();
+    if id > 0 {
+        return Some(id);
+    }
+    return None;
+}
+
+pub async fn insert_linking(
+    pool: &Pool,
+    request_hash: &str,
+    source_lang: &str,
+    target_lang: &str,
+    source_id: u64,
+    target_id: u64,
+) -> Option<u64> {
+    println!("...fn insert_linking");
+    let mut conn = pool
+        .get_conn()
+        .expect("Failed to get a connection from the pool");
+
+    let sql = format!("INSERT IGNORE INTO a_source_target (hash, source_name, target_name, source_id, target_id) VALUES (?,?,?,?,?)");
+    //println!("{}", sql);
+    let mut conn = pool
+        .get_conn()
+        .expect("Failed to get a connection from the pool");
+    conn.exec_drop(
+        sql,
+        (
+            &request_hash,
+            &source_lang,
+            &target_lang,
+            &source_id,
+            &target_id,
+        ),
+    )
+    .expect("Failed to insert data");
+
+    let id: u64 = conn.last_insert_id();
+    if id > 0 {
+        return Some(id);
+    }
     return None;
 }

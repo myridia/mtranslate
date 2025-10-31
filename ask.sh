@@ -36,13 +36,15 @@ elif [ "$task" = "2" ]; then
 
     
 elif [ "$task" = "3" ]; then
-    echo "...${task}"    
+    echo "...${task}"
+    docker stop `docker ps -qa`        
     docker rm `docker ps -qa`    
     docker volume rm $(docker volume ls -q --filter dangling=true)
     docker network prune --force
     
 elif [ "$task" = "4" ]; then
     echo "...${task}"
+    docker stop `docker ps -qa`            
     docker rm  `docker ps -qa`
     docker volume rm $(docker volume ls -q --filter dangling=true)
     docker network prune
