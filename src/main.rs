@@ -1,9 +1,10 @@
 use axum::{
+    Router,
     http::{HeaderValue, Method},
     routing::get,
-    Router,
 };
 
+use libs::config::get_config;
 use libs::help::help;
 use libs::test::test;
 use libs::translate::translate;
@@ -12,9 +13,8 @@ use tower_http::cors::CorsLayer;
 
 #[tokio::main]
 async fn main() {
-    //let token = encode_token().await;
-    //let is_auth = auth_token(&token.unwrap()).await.unwrap();
-    //println!("{}", is_auth);
+    let config = get_config();
+    //println!("{:?}", config.db_user);
 
     let cors = CorsLayer::new()
         .allow_origin("http://127.0.0.1".parse::<HeaderValue>().unwrap())

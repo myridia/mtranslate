@@ -26,6 +26,9 @@ hex-literal = {version ="*"}
 sanitize_html = {version ="*"}
 random-number = {version ="*"}
 toml = {version ="*"}
+homedir = "*"
+clap = {version='*', features = ["cargo","derive"]}
+
 [lib]
 name = "libs"
 path = "src/lib.rs"
