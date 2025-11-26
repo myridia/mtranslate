@@ -140,7 +140,7 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
             "missing v,s or t parameter, example: https://mtranslate.myridia.com?s=en&t=th&v=hello"
                 .to_string();
     }
-    let r = serde_json::json!([
+    let r = serde_json::json!(
         {
             "target_value": target_value,
             "target_hash": target_hash,
@@ -149,7 +149,7 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
             "request_hash": request_hash,
             "msg": msg,
         }
-    ]);
+    );
     Json(r)
 }
 
