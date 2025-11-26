@@ -18,6 +18,7 @@ pub fn get_config() -> AppConfig {
                     eprintln!("{err}");
                 }
             }
+
             AppConfig {
                 db_name: "dbsql1".to_string(),
                 db_user: "dbsql1".to_string(),
@@ -73,19 +74,23 @@ impl Default for AppConfig {
 fn load_or_initialize() -> Result<AppConfig, ConfigError> {
     //  https://dev.to/zofia/why-do-we-need-configuration-creating-and-handling-configuration-files-in-rust-4a46?ysclid=m00bsa1iuz12379992
     let home = my_home().unwrap().unwrap();
+    let _config_dir = &format!("{0}/.mtranslate/", home.display());
     let _config_path = &format!("{0}/.mtranslate/config.toml", home.display());
     let config_path = Path::new(_config_path);
+    let config_dir = Path::new(_config_dir);
     let config = AppConfig::default();
 
     if config_path.exists() {
         println!("path exists:{}", _config_path);
         let content = fs::read_to_string(config_path)?;
-        let config = toml::from_str(&content)?;
+        //println!(":{:?}", content);
+        let config: AppConfig = toml::from_str(&content).expect("failed");
         //return Ok(config);
     } else {
-        //let toml = toml::to_string(&config).unwrap();
-
-        //fs::write(config_path, toml)?;
+        let toml = toml::to_string(&config).unwrap();
+        //println!(":{:?}", toml);
+        fs::create_dir_all(config_dir);
+        fs::write(config_path, toml)?;
     }
 
     Ok(config)
