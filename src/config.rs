@@ -81,11 +81,11 @@ fn load_or_initialize() -> Result<AppConfig, ConfigError> {
     let config = AppConfig::default();
 
     if config_path.exists() {
-        println!("path exists:{}", _config_path);
+        //println!("...path exists:{}", _config_path);
         let content = fs::read_to_string(config_path)?;
         //println!(":{:?}", content);
         let config: AppConfig = toml::from_str(&content).expect("failed");
-        //return Ok(config);
+        return Ok(config);
     } else {
         let toml = toml::to_string(&config).unwrap();
         //println!(":{:?}", toml);
@@ -93,5 +93,6 @@ fn load_or_initialize() -> Result<AppConfig, ConfigError> {
         fs::write(config_path, toml)?;
     }
 
+    //    println!(":{:?}", config.host);
     Ok(config)
 }

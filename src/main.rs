@@ -15,6 +15,14 @@ use tower_http::cors::CorsLayer;
 async fn main() {
     let config = get_config();
     //println!("{:?}", config.db_user);
+    //    std::env::set_var("host", "123"); // Sets AAA to 123
+    unsafe {
+        std::env::set_var("db_host", config.db_host);
+        std::env::set_var("db_name", config.db_name);
+        std::env::set_var("db_user", config.db_user);
+        std::env::set_var("db_pass", config.db_pass);
+        std::env::set_var("db_port", config.db_port);
+    };
 
     let cors = CorsLayer::new()
         .allow_origin("http://127.0.0.1".parse::<HeaderValue>().unwrap())
