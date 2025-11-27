@@ -1,4 +1,4 @@
-use axum::{extract::Query, response::IntoResponse, Json};
+use axum::{Json, extract::Query, response::IntoResponse};
 use deeptrans::{Engine, Translator};
 use mysql::prelude::*;
 use mysql::*;
@@ -8,7 +8,7 @@ use sanitize_html::sanitize_str;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 use toml::Value;
 
 #[derive(Debug)]
@@ -41,10 +41,6 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
 
     let mut msg = "".to_string();
 
-    //let s = fs::read_to_string("config.toml");
-    //let v: Value = toml::from_str(&s);
-    //println!("{:?}", s);
-
     if params.contains_key("t") && params.contains_key("s") && params.contains_key("v") {
         let codes: Vec<&str> = env!("codes").split(',').collect();
         let database_url: &str = &format!(
@@ -55,7 +51,7 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
             env!("db_port"),
             env!("db_name")
         );
-
+        println!("{:?}", database_url);
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
         let sanitize: &str = &sanitize_str(&DEFAULT, &params["v"]).unwrap();
         source_value = sanitize;
@@ -286,7 +282,9 @@ pub async fn insert_linking(
         .get_conn()
         .expect("Failed to get a connection from the pool");
 
-    let sql = format!("INSERT IGNORE INTO a_source_target (hash, source_name, target_name, source_id, target_id) VALUES (?,?,?,?,?)");
+    let sql = format!(
+        "INSERT IGNORE INTO a_source_target (hash, source_name, target_name, source_id, target_id) VALUES (?,?,?,?,?)"
+    );
     //println!("{}", sql);
     let mut conn = pool
         .get_conn()
