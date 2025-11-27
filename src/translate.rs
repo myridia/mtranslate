@@ -29,7 +29,6 @@ pub async fn translate(
     config: AppConfig,
     Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    println!("{:?}", config.db_host);
     let wait: u64 = random!(2000, 7000);
     let mut source_lang = "";
     let mut source_hash = "".to_string();
@@ -52,7 +51,7 @@ pub async fn translate(
             "mysql://{0}:{1}@{2}:{3}/{4}",
             config.db_user, config.db_pass, config.db_host, config.db_port, config.db_name,
         );
-        println!("{:?}", database_url);
+
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
         let sanitize: &str = &sanitize_str(&DEFAULT, &params["v"]).unwrap();
         source_value = sanitize;
@@ -84,15 +83,9 @@ pub async fn translate(
 
                 let gr = google_translate(source_lang, target_lang, source_value, wait).await;
                 if gr.is_some() {
-                    //println!("{:?}", gr);
-                    //println!("{0}", target_hash);
                     target_value = gr.clone().unwrap()[0].to_string();
                     target_hash = gr.unwrap()[1].to_string();
                     if source_hash != target_hash {
-                        println!("source_id: {}", source_id);
-                        println!("source_hash: {}", source_hash);
-                        println!("target_hash: {}", target_hash);
-
                         let tr = get_id(&pool, &target_lang, &target_hash).await;
                         if tr.is_some() {
                             target_id = tr.unwrap()[0].parse().unwrap();
