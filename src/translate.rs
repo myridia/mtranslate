@@ -50,11 +50,7 @@ pub async fn translate(
         let codes: Vec<&str> = env!("codes").split(',').collect();
         let database_url: &str = &format!(
             "mysql://{0}:{1}@{2}:{3}/{4}",
-            env!("db_user"),
-            env!("db_pass"),
-            env!("db_host"),
-            env!("db_port"),
-            env!("db_name")
+            config.db_user, config.db_pass, config.db_host, config.db_port, config.db_name,
         );
         println!("{:?}", database_url);
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
