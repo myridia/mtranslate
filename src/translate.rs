@@ -11,6 +11,8 @@ use std::fs;
 use tokio::time::{Duration, sleep};
 use toml::Value;
 
+use crate::config::AppConfig;
+
 #[derive(Debug)]
 struct Atrans {
     target_value: String,
@@ -23,8 +25,11 @@ struct Xtrans {
     value: String,
 }
 
-pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
-    // http://127.0.0.1:8889/test
+pub async fn translate(
+    config: AppConfig,
+    Query(params): Query<HashMap<String, String>>,
+) -> impl IntoResponse {
+    println!("{:?}", config.db_host);
     let wait: u64 = random!(2000, 7000);
     let mut source_lang = "";
     let mut source_hash = "".to_string();
