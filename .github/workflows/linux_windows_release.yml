@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Install Dependencies
         run: |
-         sudo apt-get install curl build-essential gcc make mingw-w64 -y
+         sudo apt-get install curl build-essential gcc make  -y
          sudo apt-get install rustc cargo gzip -y
          sudo apt-get install g++ zlib1g-dev libmpc-dev libmpfr-dev  libgmp-dev
          
@@ -41,10 +41,7 @@ jobs:
       - name: compile linux
         run: |
           cargo build --target x86_64-unknown-linux-gnu --release 
-          
-      - name: List binary
-        run: |
-          ls target/x86_64-unknown-linux-gnu/release
+ 
           
       - name: rename binaries 
         run: |
