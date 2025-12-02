@@ -29,7 +29,7 @@ pub async fn translate(
     config: AppConfig,
     Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    let wait: u64 = random!(2000, 7000);
+    let wait: u64 = random!(config.wait_min, config.wait_max);
     let mut source_lang = "";
     let mut source_hash = "".to_string();
     let mut source_value = "";

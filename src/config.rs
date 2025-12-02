@@ -25,6 +25,8 @@ pub fn get_config() -> AppConfig {
                 db_pass: "passpass".to_string(),
                 db_host: "localhost".to_string(),
                 db_port: "3306".to_string(),
+                wait_min: 2000,
+                wait_max: 7000,
             }
         }
     };
@@ -57,6 +59,8 @@ pub struct AppConfig {
     pub db_pass: String,
     pub db_host: String,
     pub db_port: String,
+    pub wait_min: u64,
+    pub wait_max: u64,
 }
 
 impl Default for AppConfig {
@@ -67,6 +71,8 @@ impl Default for AppConfig {
             db_pass: "passpass".to_string(),
             db_host: "localhost".to_string(),
             db_port: "3306".to_string(),
+            wait_min: 2000,
+            wait_max: 7000,
         }
     }
 }
