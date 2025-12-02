@@ -1,4 +1,4 @@
-use axum::{extract::Query, response::IntoResponse, Json};
+use axum::{Json, extract::Query, response::IntoResponse};
 use deeptrans::{Engine, Translator};
 use mysql::prelude::*;
 use mysql::*;
@@ -8,8 +8,10 @@ use sanitize_html::sanitize_str;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 use toml::Value;
+
+use crate::config::AppConfig;
 
 #[derive(Debug)]
 struct Atrans {
@@ -23,9 +25,11 @@ struct Xtrans {
     value: String,
 }
 
-pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
-    // http://127.0.0.1:8889/test
-    let wait: u64 = random!(2000, 7000);
+pub async fn translate(
+    config: AppConfig,
+    Query(params): Query<HashMap<String, String>>,
+) -> impl IntoResponse {
+    let wait: u64 = random!(config.wait_min, config.wait_max);
     let mut source_lang = "";
     let mut source_hash = "".to_string();
     let mut source_value = "";
@@ -41,19 +45,11 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
 
     let mut msg = "".to_string();
 
-    //let s = fs::read_to_string("config.toml");
-    //let v: Value = toml::from_str(&s);
-    //println!("{:?}", s);
-
     if params.contains_key("t") && params.contains_key("s") && params.contains_key("v") {
         let codes: Vec<&str> = env!("codes").split(',').collect();
         let database_url: &str = &format!(
             "mysql://{0}:{1}@{2}:{3}/{4}",
-            env!("db_user"),
-            env!("db_pass"),
-            env!("db_host"),
-            env!("db_port"),
-            env!("db_name")
+            config.db_user, config.db_pass, config.db_host, config.db_port, config.db_name,
         );
 
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
@@ -87,15 +83,9 @@ pub async fn translate(Query(params): Query<HashMap<String, String>>) -> impl In
 
                 let gr = google_translate(source_lang, target_lang, source_value, wait).await;
                 if gr.is_some() {
-                    //println!("{:?}", gr);
-                    //println!("{0}", target_hash);
                     target_value = gr.clone().unwrap()[0].to_string();
                     target_hash = gr.unwrap()[1].to_string();
                     if source_hash != target_hash {
-                        println!("source_id: {}", source_id);
-                        println!("source_hash: {}", source_hash);
-                        println!("target_hash: {}", target_hash);
-
                         let tr = get_id(&pool, &target_lang, &target_hash).await;
                         if tr.is_some() {
                             target_id = tr.unwrap()[0].parse().unwrap();
@@ -286,7 +276,9 @@ pub async fn insert_linking(
         .get_conn()
         .expect("Failed to get a connection from the pool");
 
-    let sql = format!("INSERT IGNORE INTO a_source_target (hash, source_name, target_name, source_id, target_id) VALUES (?,?,?,?,?)");
+    let sql = format!(
+        "INSERT IGNORE INTO a_source_target (hash, source_name, target_name, source_id, target_id) VALUES (?,?,?,?,?)"
+    );
     //println!("{}", sql);
     let mut conn = pool
         .get_conn()
