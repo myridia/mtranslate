@@ -55,7 +55,7 @@ jobs:
           
       - name: rename binaries 
         run: |
-          cp target/x86_64-unknown-linux-gnu/release/mtranslate target/x86_64-unknown-linux-gnu/release/mtranslate
+          cp target/x86_64-unknown-linux-gnu/release/mtranslate target/x86_64-unknown-linux-gnu/release/mtranslate_linux
           cp target/x86_64-pc-windows-gnu/release/mtranslte.exe target/x86_64-pc-windows-gnu/release/mtranslate.exe
 
       - name: Upload Linux Binary to release
