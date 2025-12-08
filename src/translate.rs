@@ -1,10 +1,11 @@
-use axum::{Json, extract::Query, response::IntoResponse};
+use axum::{Json, extract, extract::Query, response::IntoResponse};
 use deeptrans::{Engine, Translator};
 use mysql::prelude::*;
 use mysql::*;
 use random_number::random;
 use sanitize_html::rules::predefined::DEFAULT;
 use sanitize_html::sanitize_str;
+use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
@@ -130,6 +131,49 @@ pub async fn translate(
             "missing v,s or t parameter, example: https://mtranslate.myridia.com?s=en&t=th&v=hello"
                 .to_string();
     }
+    let r = serde_json::json!(
+        {
+            "target_value": target_value,
+            "target_hash": target_hash,
+            "target_lang": target_lang,
+            "source_lang": source_lang,
+            "request_hash": request_hash,
+            "msg": msg,
+        }
+    );
+    Json(r)
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Payload {
+    //xemail: String,
+    html: String,
+    s: String,
+    t: String,
+}
+
+pub async fn translate_html(
+    config: AppConfig,
+    extract::Json(payload): extract::Json<Payload>,
+) -> impl IntoResponse {
+    // curl -X POST  http://0.0.0.0:8089/translate_html -H 'Content-Type:application/json'  -d '{"html":"","t":"ru","s":"en"}'
+
+    println!("{:?}", payload);
+    let mut source_lang = "";
+    let mut source_hash = "".to_string();
+    let mut source_value = "";
+    let mut source_id = 0;
+
+    let mut target_lang = "";
+    let mut target_hash = "".to_string();
+    let mut target_value = "".to_string();
+    let mut target_id = 0;
+
+    let mut request_hash = "".to_string();
+    let mut return_hash = "".to_string();
+
+    let mut msg = "".to_string();
+
     let r = serde_json::json!(
         {
             "target_value": target_value,
