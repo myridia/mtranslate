@@ -156,7 +156,7 @@ pub async fn translate_html(
     config: AppConfig,
     extract::Json(payload): extract::Json<Payload>,
 ) -> impl IntoResponse {
-    // curl -X POST  http://0.0.0.0:8089/translate_html -H 'Content-Type:application/json'  -d '{"html":"","t":"ru","s":"en"}'
+    // curl -X POST  http://0.0.0.0:8089/translate_html -H 'Content-Type:application/json'  -d '{"html":"<div class=\"hello\">Hello world</div>","t":"ru","s":"en"}'
 
     println!("{:?}", payload);
     let mut source_lang = "";

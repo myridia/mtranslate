@@ -10,6 +10,8 @@ echo -e "2\t Run - Docker Page "
 echo -e "3\t Clean Docker - Clean the docker containers and volumes "
 echo -e "4\t Clean All - Clean the docker containers and volumes and images "
 echo -e "5\t Export Db - Export the database on the docker/test server"
+echo -e "6\t Test html text via curl "
+echo -e "7\t Test plain text via curl "
 
 
 
@@ -54,6 +56,16 @@ elif [ "$task" = "5" ]; then
     echo "...${task}"
     docker  run -i --rm --net=dockers_workgroup  salamander1/mysqldump --verbose -h "10.5.0.2" -u "${DB_NAME}" -p"${DB_PASSWORD}"  "${DB_NAME}" | gzip > "dockers/init/${DB_NAME}.sql.gz"
 
+
+elif [ "$task" = "6" ]; then
+    echo "...${task}"
+    curl -X POST  http://0.0.0.0:8089/translate_html -H 'Content-Type:application/json'  -d '{"html":"<div class=\"hello\">Hello world</div>","t":"ru","s":"en"}' 
+
+
+elif [ "$task" = "7" ]; then
+    echo "...${task}"
+    curl -X GET 'http://0.0.0.0:8089?s=en&t=th&v=hello'
+    
     
 else
     echo "Goodbye! - Exit"
