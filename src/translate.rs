@@ -1,10 +1,11 @@
-use axum::{Json, extract::Query, response::IntoResponse};
+use axum::{Json, extract, extract::Query, response::IntoResponse};
 use deeptrans::{Engine, Translator};
 use mysql::prelude::*;
 use mysql::*;
 use random_number::random;
 use sanitize_html::rules::predefined::DEFAULT;
 use sanitize_html::sanitize_str;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
@@ -12,6 +13,26 @@ use tokio::time::{Duration, sleep};
 use toml::Value;
 
 use crate::config::AppConfig;
+
+#[derive(Deserialize, Debug)]
+pub struct Payload {
+    //xemail: String,
+    html: String,
+    s: String,
+    t: String,
+}
+
+#[derive(Debug, Serialize)]
+struct Translated {
+    target_value: String,
+    target_hash: String,
+    target_lang: String,
+    source_lang: String,
+    source_hash: String,
+    request_hash: String,
+    source_value: String,
+    msg: String,
+}
 
 #[derive(Debug)]
 struct Atrans {
@@ -25,122 +46,184 @@ struct Xtrans {
     value: String,
 }
 
+pub async fn xtrans(
+    pool: &Pool,
+    source_lang: &str,
+    target_lang: &str,
+    v: &str,
+    wait: u64,
+    _type: &str,
+) -> Translated {
+    let mut t = Translated {
+        target_value: "".to_string(),
+        target_hash: "".to_string(),
+        target_lang: "".to_string(),
+        source_lang: "".to_string(),
+        source_hash: "".to_string(),
+        request_hash: "".to_string(),
+        source_value: "".to_string(),
+        msg: "".to_string(),
+    };
+
+    let codes: Vec<&str> = env!("codes").split(',').collect();
+
+    if _type == "html" {
+        t.source_value = v.to_string();
+    } else {
+        let sanitize: &str = &sanitize_str(&DEFAULT, &v).unwrap();
+        t.source_value = sanitize.to_string();
+    }
+
+    t.source_hash = hash8(v).await;
+    t.source_lang = source_lang.to_string();
+    t.target_lang = target_lang.to_string();
+
+    t.request_hash = hash8(&format!(
+        "{0}_{1}_{2}",
+        t.source_lang, t.target_lang, t.source_value
+    ))
+    .await;
+
+    let at = get_target(&pool, &t.target_lang, &t.request_hash).await;
+
+    if at.is_some() == true {
+        println!("...already translated");
+        t.target_value = at.clone().unwrap()[0].clone();
+        t.target_hash = at.clone().unwrap()[1].clone();
+        t.msg = "mtranslated".to_string();
+    } else {
+        println!("wait: {0}", wait);
+        let mut source_id = 0;
+        let mut target_id = 0;
+        let sr = get_id(&pool, &t.source_lang, &t.source_hash).await;
+        if sr.is_some() {
+            source_id = sr.unwrap()[0].parse().unwrap();
+        }
+
+        let gr = google_translate(&t.source_lang, &t.target_lang, &t.source_value, wait).await;
+        if gr.is_some() {
+            t.target_value = gr.clone().unwrap()[0].to_string();
+            t.target_hash = gr.unwrap()[1].to_string();
+            if t.source_hash != t.target_hash {
+                t.msg = "gtranslated".to_string();
+                let tr = get_id(&pool, &t.target_lang, &t.target_hash).await;
+                if tr.is_some() {
+                    target_id = tr.unwrap()[0].parse().unwrap();
+                }
+                if source_id == 0 {
+                    let r =
+                        insert_lang(&pool, &t.source_lang, &t.source_value, &t.source_hash).await;
+                    if r.is_some() {
+                        source_id = r.unwrap();
+                    }
+                }
+
+                if target_id == 0 {
+                    let r =
+                        insert_lang(&pool, &t.target_lang, &t.target_value, &t.target_hash).await;
+                    if r.is_some() {
+                        target_id = r.unwrap();
+                    }
+                }
+
+                if source_id != 0 && target_id != 0 {
+                    let id = insert_linking(
+                        &pool,
+                        &t.request_hash,
+                        &t.source_lang,
+                        &t.target_lang,
+                        source_id,
+                        target_id,
+                    )
+                    .await;
+                }
+            }
+        } else {
+            t.msg = "source cannot be translated".to_string();
+        }
+    }
+
+    //    println!("{:?}", t);
+
+    return t;
+}
+
 pub async fn translate(
     config: AppConfig,
     Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     let wait: u64 = random!(config.wait_min, config.wait_max);
-    let mut source_lang = "";
-    let mut source_hash = "".to_string();
-    let mut source_value = "";
-    let mut source_id = 0;
 
-    let mut target_lang = "";
-    let mut target_hash = "".to_string();
-    let mut target_value = "".to_string();
-    let mut target_id = 0;
-
-    let mut request_hash = "".to_string();
-    let mut return_hash = "".to_string();
-
-    let mut msg = "".to_string();
+    let mut t = Translated {
+        target_value: "".to_string(),
+        target_hash: "".to_string(),
+        target_lang: "".to_string(),
+        source_lang: "".to_string(),
+        source_hash: "".to_string(),
+        request_hash: "".to_string(),
+        source_value: "".to_string(),
+        msg: "".to_string(),
+    };
 
     if params.contains_key("t") && params.contains_key("s") && params.contains_key("v") {
-        let codes: Vec<&str> = env!("codes").split(',').collect();
         let database_url: &str = &format!(
             "mysql://{0}:{1}@{2}:{3}/{4}",
             config.db_user, config.db_pass, config.db_host, config.db_port, config.db_name,
         );
 
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
-        let sanitize: &str = &sanitize_str(&DEFAULT, &params["v"]).unwrap();
-        source_value = sanitize;
-        source_hash = hash8(source_value).await;
-        source_lang = &params["s"];
-        target_lang = &params["t"];
-
-        if codes.contains(&source_lang) && codes.contains(&target_lang) && source_value.len() < 1000
-        {
-            request_hash = hash8(&format!(
-                "{0}_{1}_{2}",
-                source_lang, target_lang, source_value
-            ))
-            .await;
-
-            let already_translated = get_target(&pool, &target_lang, &request_hash).await;
-
-            if already_translated.is_some() == true {
-                println!("...translated already");
-                target_value = already_translated.clone().unwrap()[0].clone();
-                target_hash = already_translated.clone().unwrap()[1].clone();
-            } else {
-                println!("wait: {0}", wait);
-
-                let sr = get_id(&pool, &source_lang, &source_hash).await;
-                if sr.is_some() {
-                    source_id = sr.unwrap()[0].parse().unwrap();
-                }
-
-                let gr = google_translate(source_lang, target_lang, source_value, wait).await;
-                if gr.is_some() {
-                    target_value = gr.clone().unwrap()[0].to_string();
-                    target_hash = gr.unwrap()[1].to_string();
-                    if source_hash != target_hash {
-                        let tr = get_id(&pool, &target_lang, &target_hash).await;
-                        if tr.is_some() {
-                            target_id = tr.unwrap()[0].parse().unwrap();
-                        }
-                        if source_id == 0 {
-                            let r =
-                                insert_lang(&pool, source_lang, source_value, &source_hash).await;
-                            if r.is_some() {
-                                source_id = r.unwrap();
-                            }
-                        }
-
-                        if target_id == 0 {
-                            let r =
-                                insert_lang(&pool, target_lang, &target_value, &target_hash).await;
-                            if r.is_some() {
-                                target_id = r.unwrap();
-                            }
-                        }
-
-                        if source_id != 0 && target_id != 0 {
-                            let id = insert_linking(
-                                &pool,
-                                &request_hash,
-                                source_lang,
-                                target_lang,
-                                source_id,
-                                target_id,
-                            )
-                            .await;
-                        }
-                    }
-                } else {
-                    msg = "source cannot be translated".to_string();
-                }
-            }
-        } else {
-            msg = "wrong v,s or t parameter, example: https://translate.myridia.com?s=en&t=th&v=hello -  not more than 1000 characters".to_string();
-        }
+        t = xtrans(
+            &pool,
+            &params["s"],
+            &params["t"],
+            &params["v"],
+            wait,
+            "text",
+        )
+        .await;
     } else {
-        msg =
+        t.msg =
             "missing v,s or t parameter, example: https://mtranslate.myridia.com?s=en&t=th&v=hello"
                 .to_string();
     }
-    let r = serde_json::json!(
-        {
-            "target_value": target_value,
-            "target_hash": target_hash,
-            "target_lang": target_lang,
-            "source_lang": source_lang,
-            "request_hash": request_hash,
-            "msg": msg,
-        }
-    );
-    Json(r)
+
+    Json(t)
+}
+
+pub async fn translate_html(
+    config: AppConfig,
+    extract::Json(payload): extract::Json<Payload>,
+) -> impl IntoResponse {
+    // curl -X POST  http://0.0.0.0:8089/translate_html -H 'Content-Type:application/json'  -d '{"html":"<div class="\hello should not be translated\" >hello</div>","t":"ru","s":"en"}'
+
+    let wait: u64 = random!(config.wait_min, config.wait_max);
+
+    let mut t = Translated {
+        target_value: "".to_string(),
+        target_hash: "".to_string(),
+        target_lang: "".to_string(),
+        source_lang: "".to_string(),
+        source_hash: "".to_string(),
+        request_hash: "".to_string(),
+        source_value: "".to_string(),
+        msg: "".to_string(),
+    };
+
+    if payload.html != "" && payload.s != "" && payload.t != "" {
+        let database_url: &str = &format!(
+            "mysql://{0}:{1}@{2}:{3}/{4}",
+            config.db_user, config.db_pass, config.db_host, config.db_port, config.db_name,
+        );
+
+        let pool = Pool::new(database_url).expect("Failed to create a connection pool");
+        t = xtrans(&pool, &payload.s, &payload.t, &payload.html, wait, "html").await;
+    } else {
+        t.msg =
+            "missing v,s or t parameter, example: https://mtranslate.myridia.com?s=en&t=th&v=hello"
+                .to_string();
+    }
+
+    Json(t)
 }
 
 pub async fn hash8(s: &str) -> String {

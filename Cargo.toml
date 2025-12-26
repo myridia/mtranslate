@@ -26,7 +26,11 @@ hex-literal = {version ="*"}
 sanitize_html = {version ="*"}
 random-number = {version ="*"}
 toml = {version ="*"}
-homedir = "*"
+homedir = {version ="*"}
+kuchiki = {version ="*"}
+
+
+
 clap = {version='*', features = ["cargo","derive"]}
 
 [lib]
