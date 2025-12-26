@@ -17,13 +17,13 @@ permissions:
 
 jobs:
   # Single deploy job since we're just deploying
-  build_linux_windows:
+  build_linux:
     if: github.repository_owner == 'myridia'
     runs-on: ubuntu-22.04  
     steps:
       - name: Install Dependencies
         run: |
-         sudo apt-get install curl build-essential gcc make mingw-w64 -y
+         sudo apt-get install curl build-essential gcc make  -y
          sudo apt-get install rustc cargo gzip -y
          sudo apt-get install g++ zlib1g-dev libmpc-dev libmpfr-dev  libgmp-dev
          
@@ -36,64 +36,31 @@ jobs:
 
       - name: add_targets
         run: |
-          rustup target add x86_64-pc-windows-gnu
           rustup target add x86_64-unknown-linux-gnu
-          
-      - name: Compile windows
-        run: |
-          cargo build --target x86_64-pc-windows-gnu --release 
-         
 
       - name: compile linux
         run: |
           cargo build --target x86_64-unknown-linux-gnu --release 
-          
-      - name: List binary
-        run: |
-          ls target/x86_64-pc-windows-gnu/release
-          ls target/x86_64-unknown-linux-gnu/release
+ 
           
       - name: rename binaries 
         run: |
-          cp target/x86_64-unknown-linux-gnu/release/mtranslate target/x86_64-unknown-linux-gnu/release/mtranslate
-          cp target/x86_64-pc-windows-gnu/release/mtranslte.exe target/x86_64-pc-windows-gnu/release/mtranslate.exe
+          cp target/x86_64-unknown-linux-gnu/release/mtranslate target/x86_64-unknown-linux-gnu/release/mtranslate_linux
 
       - name: Upload Linux Binary to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: 'target/x86_64-unknown-linux-gnu/release/mtranslate'
+          file: 'target/x86_64-unknown-linux-gnu/release/mtranslate_linux'
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
 
-      - name: Upload Windows Binary to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: 'target/x86_64-pc-windows-gnu/release/mtranslate.exe'
-          tag: ${{ github.ref }}
-          overwrite: true
-          file_glob: true
+      
           
 
-      - name: Upload Linux Binary to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: 'target/x86_64-unknown-linux-gnu/release/mtranslate'
-          tag: ${{ github.ref }}
-          overwrite: true
-          file_glob: true
 
-      - name: Upload Windows Binary to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: 'target/x86_64-pc-windows-gnu/release/mtranslate.exe'
-          tag: ${{ github.ref }}
-          overwrite: true
-          file_glob: true     
+    
    
 
 
