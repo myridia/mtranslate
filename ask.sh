@@ -15,7 +15,7 @@ echo -e "7\t Test plain text via curl "
 
 
 
-
+until [ "$task" = "0" ]; do
 read task
 
 if [ "$task" = "1" ]; then
@@ -72,3 +72,7 @@ else
 fi
 
 
+sleep 3
+./ask.sh
+
+done 
