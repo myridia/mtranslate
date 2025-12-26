@@ -14,6 +14,14 @@ use toml::Value;
 
 use crate::config::AppConfig;
 
+#[derive(Deserialize, Debug)]
+pub struct Payload {
+    //xemail: String,
+    html: String,
+    s: String,
+    t: String,
+}
+
 #[derive(Debug, Serialize)]
 struct Translated {
     target_value: String,
@@ -44,6 +52,7 @@ pub async fn xtrans(
     target_lang: &str,
     v: &str,
     wait: u64,
+    _type: &str,
 ) -> Translated {
     let mut t = Translated {
         target_value: "".to_string(),
@@ -58,8 +67,13 @@ pub async fn xtrans(
 
     let codes: Vec<&str> = env!("codes").split(',').collect();
 
-    let sanitize: &str = &sanitize_str(&DEFAULT, &v).unwrap();
-    t.source_value = sanitize.to_string();
+    if _type == "html" {
+        t.source_value = v.to_string();
+    } else {
+        let sanitize: &str = &sanitize_str(&DEFAULT, &v).unwrap();
+        t.source_value = sanitize.to_string();
+    }
+
     t.source_hash = hash8(v).await;
     t.source_lang = source_lang.to_string();
     t.target_lang = target_lang.to_string();
@@ -158,7 +172,15 @@ pub async fn translate(
         );
 
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
-        t = xtrans(&pool, &params["s"], &params["t"], &params["v"], wait).await;
+        t = xtrans(
+            &pool,
+            &params["s"],
+            &params["t"],
+            &params["v"],
+            wait,
+            "text",
+        )
+        .await;
     } else {
         t.msg =
             "missing v,s or t parameter, example: https://mtranslate.myridia.com?s=en&t=th&v=hello"
@@ -166,14 +188,6 @@ pub async fn translate(
     }
 
     Json(t)
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Payload {
-    //xemail: String,
-    html: String,
-    s: String,
-    t: String,
 }
 
 pub async fn translate_html(
@@ -195,7 +209,20 @@ pub async fn translate_html(
         msg: "".to_string(),
     };
 
-    println!("{:?}", payload);
+    if payload.html != "" && payload.s != "" && payload.t != "" {
+        let database_url: &str = &format!(
+            "mysql://{0}:{1}@{2}:{3}/{4}",
+            config.db_user, config.db_pass, config.db_host, config.db_port, config.db_name,
+        );
+
+        let pool = Pool::new(database_url).expect("Failed to create a connection pool");
+        t = xtrans(&pool, &payload.s, &payload.t, &payload.html, wait, "html").await;
+    } else {
+        t.msg =
+            "missing v,s or t parameter, example: https://mtranslate.myridia.com?s=en&t=th&v=hello"
+                .to_string();
+    }
+
     Json(t)
 }
 
