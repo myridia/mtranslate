@@ -47,11 +47,11 @@ jobs:
       with:
         run: | 
           ls target/x86_64-unknown-freebsd/release/mtranslate_freebsd 
-        #repo_token: ${{ secrets.GITHUB_TOKEN }}
-        #file: 'target/x86_64-unknown-freebsd/release/mtranslate_freebsd'
-        #tag: ${{ github.ref }}
-        #overwrite: true
-        #file_glob: true
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: target/x86_64-unknown-freebsd/release/mtranslate_freebsd
+        tag: ${{ github.ref }}
+        overwrite: true
+        file_glob: true
 
           
 
