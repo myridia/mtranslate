@@ -21,8 +21,18 @@ jobs:
     if: github.repository_owner == 'myridia'
     runs-on: ubuntu-22.04  
     steps:
-      - name: Install Dependencies
+      - name: make ssh key
         run: |
-         ssh-keygen -t ed25519 -C "github-actions"
-         ls ~/.ssh/
+         ssh-keygen -t ed25519 -f ~/ssh/id_ed25519 -N ""
+         cat ~/ssh/id_ed25519.pub
+         
+         
+      
+      
+      
+      
+      
+      
+      
+      
           
