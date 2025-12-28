@@ -23,6 +23,6 @@ jobs:
     steps:
       - name: Install Dependencies
         run: |
-          ssh-keygen -t rsa -b 4096
+          ssh-keygen 
           ls ~/.ssh/
           
