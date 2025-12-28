@@ -25,7 +25,7 @@ jobs:
           echo "list folder" 
           ls 
           echo "scp README.md"
-          scp README root@web.draconarius.com:/opt/
+          scp README.md root@web.draconarius.com:/opt/
           # scp -r ./your-folder \
           #  ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/path/on/server
 
