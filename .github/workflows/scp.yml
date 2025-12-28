@@ -22,7 +22,7 @@ jobs:
 
       - name: SCP files to server
         run: |
-          list folder 
+          echo "list folder" 
           ls 
           # scp -r ./your-folder \
           #  ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/path/on/server
