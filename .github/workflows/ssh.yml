@@ -30,7 +30,7 @@ jobs:
          echo "public key"
          cat ~/.ssh/id_ed25519.pub
          echo "private key"
-         cat ~/.ssh/id_ed25519.pub
+         cat ~/.ssh/id_ed25519
 
          
          
