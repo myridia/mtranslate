@@ -24,8 +24,8 @@ jobs:
         run: |
           echo "list folder" 
           ls ~/.ssh 
-          #echo "scp README.md"
-          #scp README.md root@${{ secrets.SERVER_HOST }}:/opt/
+          echo "scp README.md"
+          scp README.md root@${{ secrets.SERVER_HOST }}:/opt/
           # scp -r ./your-folder \
           #  ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/path/on/server
 
