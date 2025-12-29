@@ -24,6 +24,7 @@ jobs:
         run: |
           echo "list root folder" 
           ls 
+          wget https://github.com/myridia/mtranslate/releases/download/main/mtranslate_linux -O mtranslate 
           echo "scp README.md"
           scp README.md root@${{ secrets.SERVER_HOST }}:/opt/
           # scp -r ./your-folder \
