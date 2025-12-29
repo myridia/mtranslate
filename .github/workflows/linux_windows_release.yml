@@ -18,7 +18,7 @@ permissions:
 jobs:
   # Single deploy job since we're just deploying
   build_linux:
-    if: github.repository_owner == 'myridiax'
+    if: github.repository_owner == 'myridia'
     runs-on: ubuntu-22.04  
     steps:
       - name: Install Dependencies
@@ -56,6 +56,20 @@ jobs:
           overwrite: true
           file_glob: true
 
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: SCP files to server
+        run: |
+          echo "list root folder" 
+          ls 
+          echo "scp README.md"
+          scp README.md root@${{ secrets.SERVER_HOST }}:/opt/
       
           
 
