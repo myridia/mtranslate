@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'myridiax'
+    if: github.repository_owner == 'myridia'
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -22,8 +22,8 @@ jobs:
 
       - name: SCP files to server
         run: |
-          echo "list folder" 
-          ls ~/.ssh 
+          echo "list root folder" 
+          ls 
           echo "scp README.md"
           scp README.md root@${{ secrets.SERVER_HOST }}:/opt/
           # scp -r ./your-folder \
