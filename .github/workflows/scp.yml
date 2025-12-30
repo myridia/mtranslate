@@ -30,7 +30,7 @@ jobs:
           file mtranslate 
           
           echo "upload..."
-          # scp README.md root@web.draconarius.com:/var/customers/webs/mtranslate/
+          scp mtranslate root@web.draconarius.com:/var/customers/webs/mtranslate/
           # scp mtranslate ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/
           # ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}: "sudo systemctl restart mtranslate"
 
