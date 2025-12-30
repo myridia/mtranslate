@@ -22,11 +22,13 @@ jobs:
 
       - name: SCP files to server
         run: |
+
+          wget https://github.com/myridia/mtranslate/releases/download/main/mtranslate_linux -O ~/mtranslate 
           echo "list root folder" 
           ls 
-          wget https://github.com/myridia/mtranslate/releases/download/main/mtranslate_linux -O mtranslate 
+          
           echo "upload"
-          scp mtranslate ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/
+          # scp ~/mtranslate ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/
           # ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}: "sudo systemctl restart mtranslate"
 
 
