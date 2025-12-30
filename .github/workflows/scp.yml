@@ -25,7 +25,7 @@ jobs:
 
           wget https://github.com/myridia/mtranslate/releases/download/main/mtranslate_linux -O ~/mtranslate 
           echo "list root folder" 
-          ls 
+          ls ~/
           
           echo "upload"
           # scp ~/mtranslate ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/
