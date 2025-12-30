@@ -26,8 +26,8 @@ jobs:
           ls 
           wget https://github.com/myridia/mtranslate/releases/download/main/mtranslate_linux -O mtranslate 
           echo "upload"
-          scp mtranslate root@${{ secrets.SERVER_HOST }}:/opt/
-          ssh root@${{ secrets.SERVER_HOST }}: "sudo systemctl restart mtranslate"
+          scp mtranslate ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}: "sudo systemctl restart mtranslate"
 
 
 
