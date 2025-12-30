@@ -27,7 +27,6 @@ jobs:
           chmod 777 mtranslate 
           echo "list root folder" 
           ls -all
-          file mtranslate 
           
           echo "upload..."
           scp mtranslate ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}
