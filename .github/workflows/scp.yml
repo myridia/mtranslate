@@ -30,7 +30,7 @@ jobs:
           
           echo "upload..."
           scp mtranslate ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}: "sudo systemctl restart mtranslate"
+          #ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}: "sudo systemctl restart mtranslate"
 
 
 
