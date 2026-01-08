@@ -32,7 +32,7 @@ jobs:
 
       - name: list macos binary
         run: |
-          ls target/x86_64-apple-darwin/release
+          ls target/release
           
       - name: rename macos binary
         run: |
