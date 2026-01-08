@@ -36,7 +36,7 @@ jobs:
           
       - name: rename macos binary
         run: |
-          cp target/x86_64-apple-darwin/release/mtranslate target/x86_64-apple-darwin/release/mtranslate_macos
+          cp target/release/mtranslate target/release/mtranslate_macos
 
       - name: Upload Macos Intel Binary to release
         uses: svenstaro/upload-release-action@v2
