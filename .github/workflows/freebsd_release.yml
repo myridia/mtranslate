@@ -33,6 +33,7 @@ jobs:
         usesh: true
         prepare: |
           pkg install -y curl 
+          pkg install -y cmake 
           
         name: install rustup in freebsd
         run: |
