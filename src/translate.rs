@@ -1,8 +1,9 @@
 use crate::config::AppConfig;
+//use axum::http::StatusCode;
 use axum::{Json, extract, extract::Query, response::IntoResponse};
 use deeptrans::{Engine, Translator};
-use kuchiki::traits::*;
-use kuchiki::{NodeRef, parse_html};
+//use kuchiki::traits::*;
+//use kuchiki::{NodeRef, parse_html};
 use mysql::prelude::*;
 use mysql::*;
 use random_number::random;
@@ -11,9 +12,9 @@ use sanitize_html::sanitize_str;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::fs;
+//use std::fs;
 use tokio::time::{Duration, sleep};
-use toml::Value;
+//use toml::Value;
 
 #[derive(Deserialize, Debug)]
 pub struct Payload {
@@ -45,34 +46,6 @@ struct Atrans {
 struct Xtrans {
     id: i64,
     value: String,
-}
-
-pub async fn translate_htmlx(extract::Json(payload): extract::Json<Payload>) -> impl IntoResponse {
-    let html = payload.html.to_string().clone();
-
-    let mut document = parse_html().one(html);
-
-    for text_node in document.descendants().text_nodes() {
-        let old_text = text_node.borrow().to_uppercase();
-        //t = xtrans(&pool, &payload.s, &payload.t, &old_text, wait).await;
-        //let t = xtrans3(&pool, s, t, &old_text, wait);
-        //println!("{}", t);
-        let new_text = "xxxxxx".to_string();
-        text_node.replace(new_text);
-    }
-
-    // Serialize back to HTML
-    let mut output = Vec::new();
-    document.serialize(&mut output).unwrap();
-    let x = String::from_utf8(output).unwrap();
-    //println!("{}", xhtml);
-
-    let r = serde_json::json!([
-        {
-            "test": "OK",
-        }
-    ]);
-    Json(r)
 }
 
 pub async fn translate_html(
@@ -107,22 +80,7 @@ pub async fn translate_html(
 
         // Loop transversely  and change all text nodes
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
-        let x = xtrans2(&pool, &payload.s, &payload.t, &payload.html, wait).await;
-        println!("{:?}", x);
-        /*
-        for text_node in document.descendants().text_nodes() {
-            let old_text = text_node.borrow().to_uppercase();
-            //t = xtrans(&pool, &payload.s, &payload.t, &old_text, wait).await;
-
-            let new_text = "xxxxxx".to_string();
-            text_node.replace(new_text);
-        }
-
-        // Serialize back to HTML
-        let mut output = Vec::new();
-        document.serialize(&mut output).unwrap();
-        println!("{}", String::from_utf8(output).unwrap());
-        */
+        t = xtrans(&pool, &payload.s, &payload.t, &payload.html, wait).await;
     } else {
         t.msg =
             "missing v,s or t parameter, example: https://mtranslate.myridia.com?s=en&t=th&v=hello"
@@ -130,33 +88,6 @@ pub async fn translate_html(
     }
 
     Json(t)
-}
-pub async fn xtrans2(pool: &Pool, s: &str, t: &str, v: &str, wait: u64) -> String {
-    let mut r = "".to_string();
-    let mut html = r#"<div><p>hello</p></div>"#;
-    let mut document = parse_html().one(html);
-
-    for text_node in document.descendants().text_nodes() {
-        let old_text = text_node.borrow().to_uppercase();
-        //t = xtrans(&pool, &payload.s, &payload.t, &old_text, wait).await;
-        //let t = xtrans3(&pool, s, t, &old_text, wait);
-        println!("{}", t);
-        let new_text = "xxxxxx".to_string();
-        text_node.replace(new_text);
-    }
-
-    // Serialize back to HTML
-    let mut output = Vec::new();
-    document.serialize(&mut output).unwrap();
-    r = String::from_utf8(output).unwrap();
-    //println!("{}", xhtml);
-
-    return r;
-}
-
-pub fn xtrans3(pool: &Pool, source_lang: &str, target_lang: &str, v: &str, wait: u64) -> String {
-    let t = "hello".to_string();
-    return t;
 }
 
 pub async fn xtrans(
@@ -177,7 +108,7 @@ pub async fn xtrans(
         msg: "".to_string(),
     };
 
-    let codes: Vec<&str> = env!("codes").split(',').collect();
+    //    let codes: Vec<&str> = env!("codes").split(',').collect();
 
     let sanitize: &str = &sanitize_str(&DEFAULT, &v).unwrap();
     t.source_value = sanitize.to_string();
@@ -235,7 +166,7 @@ pub async fn xtrans(
                 }
 
                 if source_id != 0 && target_id != 0 {
-                    let id = insert_linking(
+                    let _id = insert_linking(
                         &pool,
                         &t.request_hash,
                         &t.source_lang,
@@ -419,9 +350,6 @@ pub async fn insert_linking(
     target_id: u64,
 ) -> Option<u64> {
     println!("...fn insert_linking");
-    let mut conn = pool
-        .get_conn()
-        .expect("Failed to get a connection from the pool");
 
     let sql = format!(
         "INSERT IGNORE INTO a_source_target (hash, source_name, target_name, source_id, target_id) VALUES (?,?,?,?,?)"
@@ -447,24 +375,4 @@ pub async fn insert_linking(
         return Some(id);
     }
     return None;
-}
-
-pub async fn trans_html(html: &str) -> String {
-    let mut r = "".to_string();
-    //let mut html = r#"<div><p>hello</p></div>"#;
-    let mut document = parse_html().one(html);
-
-    // Loop transversely  and change all text nodes
-    for text_node in document.descendants().text_nodes() {
-        let old_text = text_node.borrow().to_uppercase();
-        let new_text = "xxxxxx".to_string();
-        text_node.replace(new_text);
-    }
-
-    // Serialize back to HTML
-    let mut output = Vec::new();
-    document.serialize(&mut output).unwrap();
-    println!("{}", String::from_utf8(output).unwrap());
-
-    return r;
 }
