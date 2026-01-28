@@ -48,6 +48,25 @@ struct Xtrans {
 }
 
 pub async fn translate_htmlx(extract::Json(payload): extract::Json<Payload>) -> impl IntoResponse {
+    let html = payload.html.to_string().clone();
+
+    let mut document = parse_html().one(html);
+
+    for text_node in document.descendants().text_nodes() {
+        let old_text = text_node.borrow().to_uppercase();
+        //t = xtrans(&pool, &payload.s, &payload.t, &old_text, wait).await;
+        //let t = xtrans3(&pool, s, t, &old_text, wait);
+        //println!("{}", t);
+        let new_text = "xxxxxx".to_string();
+        text_node.replace(new_text);
+    }
+
+    // Serialize back to HTML
+    let mut output = Vec::new();
+    document.serialize(&mut output).unwrap();
+    let x = String::from_utf8(output).unwrap();
+    //println!("{}", xhtml);
+
     let r = serde_json::json!([
         {
             "test": "OK",
