@@ -7,7 +7,7 @@ use axum::{
 use libs::config::get_config;
 use libs::help::help;
 use libs::test::test;
-use libs::translate::{translate, translate_html};
+use libs::translate::{translate, translate_html, translate_htmlx};
 use std::net::SocketAddr;
 use tower_http::cors::CorsLayer;
 
@@ -29,7 +29,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(move |p| translate(config, p)))
-        .route("/translate_html", post(move |p| translate_html(config2, p)))
+        //.route("/translate_html", post(move |p| translate_html(config2, p)))
+        .route("/translate_html", post(translate_htmlx))
         .route("/help", get(help))
         .route("/test", get(move || test(x)))
         .layer(cors)
