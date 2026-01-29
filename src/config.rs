@@ -1,4 +1,3 @@
-use clap::Parser;
 use homedir::my_home;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -95,7 +94,7 @@ fn load_or_initialize() -> Result<AppConfig, ConfigError> {
     } else {
         let toml = toml::to_string(&config).unwrap();
         //println!(":{:?}", toml);
-        fs::create_dir_all(config_dir);
+        let _x = fs::create_dir_all(config_dir);
         fs::write(config_path, toml)?;
     }
 

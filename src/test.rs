@@ -1,28 +1,30 @@
 use axum::{Json, response::IntoResponse};
+use serde::Serialize;
 
-use kuchiki::traits::*;
-use kuchiki::{NodeRef, parse_html};
+#[derive(Debug, Serialize)]
+pub struct Translated {
+    target_value: String,
+    target_hash: String,
+    target_lang: String,
+    source_lang: String,
+    source_hash: String,
+    request_hash: String,
+    source_value: String,
+    msg: String,
+}
 
-pub async fn test(x: u8) -> impl IntoResponse {
-    let mut html = r#"<div><p>hello</p></div>"#;
-    let mut document = parse_html().one(html);
+//#[axum_macros::debug_handler]
+pub async fn test_get(x: u8) -> impl IntoResponse {
+    let t = Translated {
+        target_value: "".to_string(),
+        target_hash: "".to_string(),
+        target_lang: "".to_string(),
+        source_lang: "".to_string(),
+        source_hash: "".to_string(),
+        request_hash: "".to_string(),
+        source_value: "".to_string(),
+        msg: x.to_string(),
+    };
 
-    // Loop transversely  and change all text nodes
-    for text_node in document.descendants().text_nodes() {
-        let old_text = text_node.borrow().to_uppercase();
-        let new_text = "xxxxxx".to_string();
-        text_node.replace(new_text);
-    }
-
-    // Serialize back to HTML
-    let mut output = Vec::new();
-    document.serialize(&mut output).unwrap();
-    println!("{}", String::from_utf8(output).unwrap());
-
-    let r = serde_json::json!([
-        {
-            "test": "OK",
-        }
-    ]);
-    Json(r)
+    Json(t)
 }

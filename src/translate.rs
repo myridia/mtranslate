@@ -1,37 +1,26 @@
-use axum::{Json, extract, extract::Query, response::IntoResponse};
+use crate::config::AppConfig;
+use axum::{Json, extract::Query, response::IntoResponse};
 use deeptrans::{Engine, Translator};
 use mysql::prelude::*;
 use mysql::*;
 use random_number::random;
 use sanitize_html::rules::predefined::DEFAULT;
 use sanitize_html::sanitize_str;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::fs;
 use tokio::time::{Duration, sleep};
-use toml::Value;
-
-use crate::config::AppConfig;
-
-#[derive(Deserialize, Debug)]
-pub struct Payload {
-    //xemail: String,
-    html: String,
-    s: String,
-    t: String,
-}
 
 #[derive(Debug, Serialize)]
-struct Translated {
-    target_value: String,
-    target_hash: String,
-    target_lang: String,
-    source_lang: String,
-    source_hash: String,
-    request_hash: String,
-    source_value: String,
-    msg: String,
+pub struct Translated {
+    pub target_value: String,
+    pub target_hash: String,
+    pub target_lang: String,
+    pub source_lang: String,
+    pub source_hash: String,
+    pub request_hash: String,
+    pub source_value: String,
+    pub msg: String,
 }
 
 #[derive(Debug)]
@@ -52,7 +41,6 @@ pub async fn xtrans(
     target_lang: &str,
     v: &str,
     wait: u64,
-    _type: &str,
 ) -> Translated {
     let mut t = Translated {
         target_value: "".to_string(),
@@ -65,14 +53,10 @@ pub async fn xtrans(
         msg: "".to_string(),
     };
 
-    let codes: Vec<&str> = env!("codes").split(',').collect();
+    //    let codes: Vec<&str> = env!("codes").split(',').collect();
 
-    if _type == "html" {
-        t.source_value = v.to_string();
-    } else {
-        let sanitize: &str = &sanitize_str(&DEFAULT, &v).unwrap();
-        t.source_value = sanitize.to_string();
-    }
+    let sanitize: &str = &sanitize_str(&DEFAULT, &v).unwrap();
+    t.source_value = sanitize.to_string();
 
     t.source_hash = hash8(v).await;
     t.source_lang = source_lang.to_string();
@@ -127,7 +111,7 @@ pub async fn xtrans(
                 }
 
                 if source_id != 0 && target_id != 0 {
-                    let id = insert_linking(
+                    let _id = insert_linking(
                         &pool,
                         &t.request_hash,
                         &t.source_lang,
@@ -172,51 +156,7 @@ pub async fn translate(
         );
 
         let pool = Pool::new(database_url).expect("Failed to create a connection pool");
-        t = xtrans(
-            &pool,
-            &params["s"],
-            &params["t"],
-            &params["v"],
-            wait,
-            "text",
-        )
-        .await;
-    } else {
-        t.msg =
-            "missing v,s or t parameter, example: https://mtranslate.myridia.com?s=en&t=th&v=hello"
-                .to_string();
-    }
-
-    Json(t)
-}
-
-pub async fn translate_html(
-    config: AppConfig,
-    extract::Json(payload): extract::Json<Payload>,
-) -> impl IntoResponse {
-    // curl -X POST  http://0.0.0.0:8089/translate_html -H 'Content-Type:application/json'  -d '{"html":"<div class="\hello should not be translated\" >hello</div>","t":"ru","s":"en"}'
-
-    let wait: u64 = random!(config.wait_min, config.wait_max);
-
-    let mut t = Translated {
-        target_value: "".to_string(),
-        target_hash: "".to_string(),
-        target_lang: "".to_string(),
-        source_lang: "".to_string(),
-        source_hash: "".to_string(),
-        request_hash: "".to_string(),
-        source_value: "".to_string(),
-        msg: "".to_string(),
-    };
-
-    if payload.html != "" && payload.s != "" && payload.t != "" {
-        let database_url: &str = &format!(
-            "mysql://{0}:{1}@{2}:{3}/{4}",
-            config.db_user, config.db_pass, config.db_host, config.db_port, config.db_name,
-        );
-
-        let pool = Pool::new(database_url).expect("Failed to create a connection pool");
-        t = xtrans(&pool, &payload.s, &payload.t, &payload.html, wait, "html").await;
+        t = xtrans(&pool, &params["s"], &params["t"], &params["v"], wait).await;
     } else {
         t.msg =
             "missing v,s or t parameter, example: https://mtranslate.myridia.com?s=en&t=th&v=hello"
@@ -355,9 +295,6 @@ pub async fn insert_linking(
     target_id: u64,
 ) -> Option<u64> {
     println!("...fn insert_linking");
-    let mut conn = pool
-        .get_conn()
-        .expect("Failed to get a connection from the pool");
 
     let sql = format!(
         "INSERT IGNORE INTO a_source_target (hash, source_name, target_name, source_id, target_id) VALUES (?,?,?,?,?)"

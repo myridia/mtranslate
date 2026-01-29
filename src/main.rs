@@ -6,15 +6,16 @@ use axum::{
 
 use libs::config::get_config;
 use libs::help::help;
-use libs::test::test;
-use libs::translate::{translate, translate_html};
+use libs::html_translate::*;
+use libs::test::test_get;
+use libs::translate::translate;
 use std::net::SocketAddr;
 use tower_http::cors::CorsLayer;
 
 #[tokio::main]
 async fn main() {
     let config = get_config();
-    let config2 = config.clone();
+    let config2 = get_config();
 
     let cors = CorsLayer::new()
         .allow_origin("http://127.0.0.1".parse::<HeaderValue>().unwrap())
@@ -29,16 +30,17 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(move |p| translate(config, p)))
-        .route("/translate_html", post(move |p| translate_html(config2, p)))
+        .route("/", post(move |p| html(config2, p)))
         .route("/help", get(help))
-        .route("/test", get(move || test(x)))
+        .route("/test", get(move || test_get(x)))
         .layer(cors)
         .layer(CorsLayer::permissive());
 
     println!("Server started successfully");
-    let host = "0.0.0.0:8089";
-    println!("http://{}/test", host);
-    println!("http://{}?s=en&t=th&v=hello", host);
+    let h: String = hostname::get().unwrap().into_string().unwrap();
+    let host = format!("0.0.0.0:8089");
+    println!("http://{}:8089/test", h);
+    println!("http://{}:8089?s=en&t=th&v=hello", host);
 
     let listener = tokio::net::TcpListener::bind(host).await.unwrap();
     axum::serve(
