@@ -66,7 +66,7 @@ fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wai
     let document = parse_html().one(html);
 
     for text_node in document.descendants().text_nodes() {
-        let old_text = text_node.borrow().to_uppercase();
+        let old_text = text_node.borrow().to_string();
         let rt = tokio::runtime::Runtime::new().unwrap();
         let x = rt.block_on(xtrans(&pool, source_lang, target_lang, &old_text, wait));
         let new_text = x.target_value.to_string();
