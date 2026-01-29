@@ -5,6 +5,7 @@ on:
     workflows: ["release_linux"]
     types:
       - completed
+  workflow_dispatch:
 jobs:
   deploy:
     runs-on: ubuntu-latest
