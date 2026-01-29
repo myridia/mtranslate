@@ -75,7 +75,9 @@ fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wai
 
     let mut output = Vec::new();
     document.serialize(&mut output).unwrap();
-    let new_html = String::from_utf8(output).unwrap();
-
+    let new_html = String::from_utf8(output)
+        .unwrap()
+        .replace("<html><head></head><body>", "")
+        .replace("</body></html>", "");
     return new_html;
 }
