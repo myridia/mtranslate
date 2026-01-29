@@ -37,9 +37,10 @@ async fn main() {
         .layer(CorsLayer::permissive());
 
     println!("Server started successfully");
-    let host = "0.0.0.0:8089";
-    println!("http://{}/test", host);
-    println!("http://{}?s=en&t=th&v=hello", host);
+    let h: String = hostname::get().unwrap().into_string().unwrap();
+    let host = format!("0.0.0.0:8089");
+    println!("http://{}:8089/test", h);
+    println!("http://{}:8089?s=en&t=th&v=hello", host);
 
     let listener = tokio::net::TcpListener::bind(host).await.unwrap();
     axum::serve(

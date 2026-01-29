@@ -20,6 +20,7 @@ toml = {version ="*"}
 homedir = {version ="*"}
 kuchiki = {version ="*"}
 http = {version ="*"}
+hostname = {version ="*"}
 
 [lib]
 name = "libs"
