@@ -1,10 +1,11 @@
-name: SCP Deploy
+name: deploy_scp
 
 on:
-  push:
-    branches:
-      - main
-
+  workflow_run:
+    workflows: ["release_linux"]
+    types:
+      - completed
+  workflow_dispatch:
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -23,13 +24,21 @@ jobs:
       - name: SCP files to server
         run: |
 
+          echo "checkout release"
           wget https://github.com/myridia/mtranslate/releases/download/main/mtranslate_linux -O mtranslate
           chmod 777 mtranslate 
           echo "list root folder" 
           ls -all
+
+          echo "...delete mtranslate"
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "rm ${{ secrets.SERVER_PATH }}/mtranslate"
+
           
-          echo "upload..."
+          echo "...upload mtranslate"
           scp mtranslate ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}
+
+
+          echo "...restart"
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "systemctl restart mtranslate"
 
 
