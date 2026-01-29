@@ -1,4 +1,4 @@
-name: SCP Deploy
+name: deploy_scp
 
 on:
   workflow_run:
