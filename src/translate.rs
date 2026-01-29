@@ -1,9 +1,6 @@
 use crate::config::AppConfig;
-//use axum::http::StatusCode;
 use axum::{Json, extract, extract::Query, response::IntoResponse};
 use deeptrans::{Engine, Translator};
-//use kuchiki::traits::*;
-//use kuchiki::{NodeRef, parse_html};
 use mysql::prelude::*;
 use mysql::*;
 use random_number::random;
@@ -12,9 +9,7 @@ use sanitize_html::sanitize_str;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-//use std::fs;
 use tokio::time::{Duration, sleep};
-//use toml::Value;
 
 #[derive(Deserialize, Debug)]
 pub struct Payload {
@@ -26,14 +21,14 @@ pub struct Payload {
 
 #[derive(Debug, Serialize)]
 pub struct Translated {
-    target_value: String,
-    target_hash: String,
-    target_lang: String,
-    source_lang: String,
-    source_hash: String,
-    request_hash: String,
-    source_value: String,
-    msg: String,
+    pub target_value: String,
+    pub target_hash: String,
+    pub target_lang: String,
+    pub source_lang: String,
+    pub source_hash: String,
+    pub request_hash: String,
+    pub source_value: String,
+    pub msg: String,
 }
 
 #[derive(Debug)]
