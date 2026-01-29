@@ -8,7 +8,7 @@ use libs::config::get_config;
 use libs::help::help;
 use libs::html_translate::*;
 use libs::test::test_get;
-use libs::translate::{translate, translate_html};
+use libs::translate::translate;
 use std::net::SocketAddr;
 use tower_http::cors::CorsLayer;
 
@@ -16,7 +16,6 @@ use tower_http::cors::CorsLayer;
 async fn main() {
     let config = get_config();
     let config2 = get_config();
-    let config3 = get_config();
 
     let cors = CorsLayer::new()
         .allow_origin("http://127.0.0.1".parse::<HeaderValue>().unwrap())
@@ -31,10 +30,9 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(move |p| translate(config, p)))
-        .route("/translate_html", post(move |p| translate_html(config2, p)))
+        .route("/", post(move |p| html(config2, p)))
         .route("/help", get(help))
         .route("/test", get(move || test_get(x)))
-        .route("/html", post(move |p| html(config3, p)))
         .layer(cors)
         .layer(CorsLayer::permissive());
 
