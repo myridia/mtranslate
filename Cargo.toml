@@ -7,6 +7,7 @@ edition = "2024"
 axum = { version = "*" }
 axum_cors = { version = "*"}
 axum-client-ip = { version = "*"}
+axum-macros = "*"   # brings in #[axum::debug_handler]
 chrono = { version = "*", features = ["serde"] }
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
@@ -28,6 +29,8 @@ random-number = {version ="*"}
 toml = {version ="*"}
 homedir = {version ="*"}
 kuchiki = {version ="*"}
+scraper = {version ="*"}
+http = {version ="*"}
 
 
 

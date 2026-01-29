@@ -31,7 +31,8 @@ async fn main() {
         .route("/", get(move |p| translate(config, p)))
         .route("/translate_html", post(move |p| translate_html(config2, p)))
         .route("/help", get(help))
-        .route("/test", get(move || test(x)))
+        //.route("/test", get(move || test(x)))
+        .route("/test", get(test))
         .layer(cors)
         .layer(CorsLayer::permissive());
 
