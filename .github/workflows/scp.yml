@@ -1,10 +1,10 @@
 name: SCP Deploy
 
 on:
-  push:
-    branches:
-      - main
-
+  workflow_run:
+    workflows: ["release_linux"]
+    types:
+      - completed
 jobs:
   deploy:
     runs-on: ubuntu-latest
