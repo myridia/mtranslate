@@ -63,21 +63,29 @@ pub async fn html(
 }
 
 fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wait: u64) -> String {
+    //println!("{}", html);
+
+    let mut new_html = html.to_string();
     let document = parse_html().one(html);
 
+    let mut has_textnode = false;
     for text_node in document.descendants().text_nodes() {
         let old_text = text_node.borrow().to_string();
         let rt = tokio::runtime::Runtime::new().unwrap();
         let x = rt.block_on(xtrans(&pool, source_lang, target_lang, &old_text, wait));
         let new_text = x.target_value.to_string();
         text_node.replace(new_text);
+        has_textnode = true;
     }
 
-    let mut output = Vec::new();
-    document.serialize(&mut output).unwrap();
-    let new_html = String::from_utf8(output)
-        .unwrap()
-        .replace("<html><head></head><body>", "")
-        .replace("</body></html>", "");
+    if has_textnode {
+        let mut output = Vec::new();
+        document.serialize(&mut output).unwrap();
+        new_html = String::from_utf8(output)
+            .unwrap()
+            .replace("<html><head></head><body>", "")
+            .replace("</body></html>", "");
+    }
+    //println!("{}", new_html);
     return new_html;
 }
