@@ -13,6 +13,25 @@ ALTER TABLE `{}` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;COMMIT;
 ```
 
 
+### Maintenance Queries 
+```
+-- DELETE a
+SELECT a.id ,s.id ,t.id 
+
+FROM `a_source_target` AS a
+
+LEFT JOIN sv AS s
+ON a.source_id = s.id
+
+LEFT JOIN da AS t 
+ON a.target_id = t.id  
+
+WHERE `source_name` = 'sv' 
+AND `target_name` = 'da'
+AND (t.id IS NULL
+OR s.id IS NULL
+);
+```
 
 
 
