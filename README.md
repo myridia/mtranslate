@@ -1,8 +1,9 @@
-# ![email_gateway](pages/public/img/logo.png) mtranslate
+# ![email_gateway](pages/public/img/icon_192x192.png) mtranslate
 * Myridia's online translator service
 
 ### Usage 
 * 105 mysql tables 
+
 
 
 ### Create Tables via https://textmaker.myridia.com
@@ -148,4 +149,8 @@ zh-TW
 zu
 ```
 
-
+## Add Repository 
+```
+git remote add codeberg ssh://git@codeberg.org/veto/mtranslate.git
+git push codeberg
+```
