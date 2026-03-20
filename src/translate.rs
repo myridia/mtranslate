@@ -73,6 +73,11 @@ pub async fn xtrans(
     if at.is_some() == true {
         println!("...already translated");
         t.target_value = at.clone().unwrap()[0].clone();
+        println!(
+            "{0}->{1} -> {2}",
+            t.source_lang, t.target_lang, t.target_value
+        );
+
         t.target_hash = at.clone().unwrap()[1].clone();
         t.msg = "mtranslated".to_string();
     } else {
