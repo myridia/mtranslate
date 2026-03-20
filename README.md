@@ -150,5 +150,5 @@ zu
 
 ## Add Repository 
 ```
-git remote add codeberg https://codeberg.org/veto/mtranslate.git
+git remote add codeberg ssh://git@codeberg.org/veto/mtranslate.git
 ```
