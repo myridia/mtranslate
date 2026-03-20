@@ -76,7 +76,7 @@ pub async fn xtrans(
         t.target_hash = at.clone().unwrap()[1].clone();
         t.msg = "mtranslated".to_string();
     } else {
-        println!("...wait: {0}", wait);
+        //println!("...wait: {0}", wait);
         let mut source_id = 0;
         let mut target_id = 0;
         let sr = get_id(&pool, &t.source_lang, &t.source_hash).await;
@@ -84,45 +84,43 @@ pub async fn xtrans(
             source_id = sr.unwrap()[0].parse().unwrap();
         }
 
-        //println!("...wait: {:?}", &t.source_value);
+        println!("...g-request: {0}", &t.source_value);
         let gr = google_translate(&t.source_lang, &t.target_lang, &t.source_value, wait).await;
         if gr.is_some() {
             t.target_value = gr.clone().unwrap()[0].to_string();
             t.target_hash = gr.unwrap()[1].to_string();
-            if t.source_hash != t.target_hash {
-                t.msg = "gtranslated".to_string();
-                let tr = get_id(&pool, &t.target_lang, &t.target_hash).await;
-                if tr.is_some() {
-                    target_id = tr.unwrap()[0].parse().unwrap();
-                }
-                if source_id == 0 {
-                    let r =
-                        insert_lang(&pool, &t.source_lang, &t.source_value, &t.source_hash).await;
-                    if r.is_some() {
-                        source_id = r.unwrap();
-                    }
-                }
-
-                if target_id == 0 {
-                    let r =
-                        insert_lang(&pool, &t.target_lang, &t.target_value, &t.target_hash).await;
-                    if r.is_some() {
-                        target_id = r.unwrap();
-                    }
-                }
-
-                if source_id != 0 && target_id != 0 {
-                    let _id = insert_linking(
-                        &pool,
-                        &t.request_hash,
-                        &t.source_lang,
-                        &t.target_lang,
-                        source_id,
-                        target_id,
-                    )
-                    .await;
+            //if t.source_hash != t.target_hash {
+            t.msg = "gtranslated".to_string();
+            let tr = get_id(&pool, &t.target_lang, &t.target_hash).await;
+            if tr.is_some() {
+                target_id = tr.unwrap()[0].parse().unwrap();
+            }
+            if source_id == 0 {
+                let r = insert_lang(&pool, &t.source_lang, &t.source_value, &t.source_hash).await;
+                if r.is_some() {
+                    source_id = r.unwrap();
                 }
             }
+
+            if target_id == 0 {
+                let r = insert_lang(&pool, &t.target_lang, &t.target_value, &t.target_hash).await;
+                if r.is_some() {
+                    target_id = r.unwrap();
+                }
+            }
+
+            if source_id != 0 && target_id != 0 {
+                let _id = insert_linking(
+                    &pool,
+                    &t.request_hash,
+                    &t.source_lang,
+                    &t.target_lang,
+                    source_id,
+                    target_id,
+                )
+                .await;
+            }
+            //}
         } else {
             t.msg = "source cannot be translated".to_string();
         }
@@ -257,7 +255,7 @@ pub async fn google_translate(
     source_value: &str,
     wait: u64,
 ) -> Option<Vec<String>> {
-    println!("...fn google_translate");
+    //println!("...fn google_translate");
     let mut v: Vec<String> = vec![];
     sleep(Duration::from_millis(wait)).await;
     let trans = Translator::with_engine(source_lang, target_lang, Engine::Google);
@@ -273,7 +271,7 @@ pub async fn google_translate(
 }
 
 pub async fn insert_lang(pool: &Pool, lang: &str, value: &str, hash: &str) -> Option<u64> {
-    println!("...fn insert_lang  {0} | {1} | {2}", lang, value, hash);
+    //println!("...fn insert_lang  {0} | {1} | {2}", lang, value, hash);
     let mut conn = pool
         .get_conn()
         .expect("Failed to get a connection from the pool");
@@ -295,7 +293,7 @@ pub async fn insert_linking(
     source_id: u64,
     target_id: u64,
 ) -> Option<u64> {
-    println!("...fn insert_linking");
+    //println!("...fn insert_linking");
 
     let sql = format!(
         "INSERT IGNORE INTO a_source_target (hash, source_name, target_name, source_id, target_id) VALUES (?,?,?,?,?)"
