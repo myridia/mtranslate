@@ -71,14 +71,16 @@ fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wai
 
     let mut has_textnode = false;
     for text_node in document.descendants().text_nodes() {
-        let old_text = text_node.borrow().to_string();
+        let _old_text = text_node.borrow().to_string();
+        let old_text = _old_text.trim().to_string();
+
         //println!("{}", old_text.len());
         let mut new_text = old_text.clone();
         //println!("{}", is_numeric_and_symbols(&old_text));
         if old_text.len() > 3 && is_numeric_and_symbols(&old_text) == false {
             let rt = tokio::runtime::Runtime::new().unwrap();
             let x = rt.block_on(xtrans(&pool, source_lang, target_lang, &old_text, wait));
-            if old_text.ends_with(" ") {
+            if _old_text.ends_with(" ") {
                 new_text = format!("{0} ", x.target_value);
             } else {
                 new_text = format!("{0}", x.target_value);
