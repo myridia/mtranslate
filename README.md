@@ -148,4 +148,7 @@ zh-TW
 zu
 ```
 
-
+## Add Repository 
+```
+git remote add codeberg https://codeberg.org/veto/mtranslate.git
+```
