@@ -39,9 +39,11 @@ pub async fn xtrans(
     pool: &Pool,
     source_lang: &str,
     target_lang: &str,
-    v: &str,
+    _v: &str,
     wait: u64,
 ) -> Translated {
+    let v = _v.trim();
+
     let mut t = Translated {
         target_value: "".to_string(),
         target_hash: "".to_string(),
@@ -62,72 +64,75 @@ pub async fn xtrans(
     t.source_lang = source_lang.to_string();
     t.target_lang = target_lang.to_string();
 
-    t.request_hash = hash8(&format!(
-        "{0}_{1}_{2}",
-        t.source_lang, t.target_lang, t.source_value
-    ))
-    .await;
+    if v.len() > 0 {
+        t.request_hash = hash8(&format!(
+            "{0}_{1}_{2}",
+            t.source_lang, t.target_lang, t.source_value
+        ))
+        .await;
 
-    let at = get_target(&pool, &t.target_lang, &t.request_hash).await;
+        let at = get_target(&pool, &t.target_lang, &t.request_hash).await;
 
-    if at.is_some() == true {
-        println!("...already translated");
-        t.target_value = at.clone().unwrap()[0].clone();
-        println!(
-            "{0}->{1} -> {2}",
-            t.source_lang, t.target_lang, t.target_value
-        );
+        if at.is_some() == true {
+            t.target_value = at.clone().unwrap()[0].clone();
+            println!(
+                "...already trans:  {0}->{1} -> {2} -> {3}",
+                t.source_lang, t.target_lang, t.source_value, t.target_value
+            );
 
-        t.target_hash = at.clone().unwrap()[1].clone();
-        t.msg = "mtranslated".to_string();
-    } else {
-        //println!("...wait: {0}", wait);
-        let mut source_id = 0;
-        let mut target_id = 0;
-        let sr = get_id(&pool, &t.source_lang, &t.source_hash).await;
-        if sr.is_some() {
-            source_id = sr.unwrap()[0].parse().unwrap();
-        }
-
-        println!("...g-request: {0}", &t.source_value);
-        let gr = google_translate(&t.source_lang, &t.target_lang, &t.source_value, wait).await;
-        if gr.is_some() {
-            t.target_value = gr.clone().unwrap()[0].to_string();
-            t.target_hash = gr.unwrap()[1].to_string();
-            //if t.source_hash != t.target_hash {
-            t.msg = "gtranslated".to_string();
-            let tr = get_id(&pool, &t.target_lang, &t.target_hash).await;
-            if tr.is_some() {
-                target_id = tr.unwrap()[0].parse().unwrap();
-            }
-            if source_id == 0 {
-                let r = insert_lang(&pool, &t.source_lang, &t.source_value, &t.source_hash).await;
-                if r.is_some() {
-                    source_id = r.unwrap();
-                }
-            }
-
-            if target_id == 0 {
-                let r = insert_lang(&pool, &t.target_lang, &t.target_value, &t.target_hash).await;
-                if r.is_some() {
-                    target_id = r.unwrap();
-                }
-            }
-
-            if source_id != 0 && target_id != 0 {
-                let _id = insert_linking(
-                    &pool,
-                    &t.request_hash,
-                    &t.source_lang,
-                    &t.target_lang,
-                    source_id,
-                    target_id,
-                )
-                .await;
-            }
-            //}
+            t.target_hash = at.clone().unwrap()[1].clone();
+            t.msg = "mtranslated".to_string();
         } else {
-            t.msg = "source cannot be translated".to_string();
+            //println!("...wait: {0}", wait);
+            let mut source_id = 0;
+            let mut target_id = 0;
+            let sr = get_id(&pool, &t.source_lang, &t.source_hash).await;
+            if sr.is_some() {
+                source_id = sr.unwrap()[0].parse().unwrap();
+            }
+
+            println!("...g-request: {0}", &t.source_value);
+            let gr = google_translate(&t.source_lang, &t.target_lang, &t.source_value, wait).await;
+            if gr.is_some() {
+                t.target_value = gr.clone().unwrap()[0].to_string();
+                t.target_hash = gr.unwrap()[1].to_string();
+                //if t.source_hash != t.target_hash {
+                t.msg = "gtranslated".to_string();
+                let tr = get_id(&pool, &t.target_lang, &t.target_hash).await;
+                if tr.is_some() {
+                    target_id = tr.unwrap()[0].parse().unwrap();
+                }
+                if source_id == 0 {
+                    let r =
+                        insert_lang(&pool, &t.source_lang, &t.source_value, &t.source_hash).await;
+                    if r.is_some() {
+                        source_id = r.unwrap();
+                    }
+                }
+
+                if target_id == 0 {
+                    let r =
+                        insert_lang(&pool, &t.target_lang, &t.target_value, &t.target_hash).await;
+                    if r.is_some() {
+                        target_id = r.unwrap();
+                    }
+                }
+
+                if source_id != 0 && target_id != 0 {
+                    let _id = insert_linking(
+                        &pool,
+                        &t.request_hash,
+                        &t.source_lang,
+                        &t.target_lang,
+                        source_id,
+                        target_id,
+                    )
+                    .await;
+                }
+                //}
+            } else {
+                t.msg = "source cannot be translated".to_string();
+            }
         }
     }
 
@@ -211,10 +216,8 @@ pub async fn get_id(pool: &Pool, name: &str, hash: &str) -> Option<Vec<String>> 
 }
 
 pub async fn get_target(pool: &Pool, target_name: &str, request_hash: &str) -> Option<Vec<String>> {
-    println!("...fn get_target");
-
+    //println!("...fn get_target");
     //println!("{}", sql0);
-
     let mut v: Vec<String> = vec![];
     let mut conn = pool
         .get_conn()
