@@ -78,11 +78,11 @@ fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wai
         if old_text.len() > 3 && is_numeric_and_symbols(&old_text) == false {
             let rt = tokio::runtime::Runtime::new().unwrap();
             let x = rt.block_on(xtrans(&pool, source_lang, target_lang, &old_text, wait));
-            let new_text = x.target_value.to_string();
+            new_text = x.target_value.to_string();
         }
 
-        //text_node.replace(new_text);
-        //has_textnode = true;
+        text_node.replace(new_text);
+        has_textnode = true;
     }
 
     if has_textnode {
