@@ -34,6 +34,7 @@ pub async fn html(
     config: AppConfig,
     extract::Json(p): extract::Json<Payload>,
 ) -> impl IntoResponse {
+    println!("...html");
     let wait: u64 = random!(config.wait_min, config.wait_max);
 
     let mut t = Translated {
@@ -71,11 +72,17 @@ fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wai
     let mut has_textnode = false;
     for text_node in document.descendants().text_nodes() {
         let old_text = text_node.borrow().to_string();
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let x = rt.block_on(xtrans(&pool, source_lang, target_lang, &old_text, wait));
-        let new_text = x.target_value.to_string();
-        text_node.replace(new_text);
-        has_textnode = true;
+        //println!("{}", old_text.len());
+        let mut new_text = old_text.clone();
+        //println!("{}", is_numeric_and_symbols(&old_text));
+        if old_text.len() > 3 && is_numeric_and_symbols(&old_text) == false {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            let x = rt.block_on(xtrans(&pool, source_lang, target_lang, &old_text, wait));
+            let new_text = x.target_value.to_string();
+        }
+
+        //text_node.replace(new_text);
+        //has_textnode = true;
     }
 
     if has_textnode {
@@ -88,4 +95,27 @@ fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wai
     }
     //println!("{}", new_html);
     return new_html;
+}
+
+fn is_numeric_and_symbols(s: &str) -> bool {
+    if s.is_empty() {
+        return false; // Or true, depending on whether you consider an empty string valid
+    }
+
+    for c in s.chars() {
+        if !c.is_numeric() && !is_special_symbol(c) {
+            return false;
+        }
+    }
+
+    true
+}
+
+fn is_special_symbol(c: char) -> bool {
+    match c {
+        '!' | '@' | '#' | '$' | '%' | '^' | '&' | '*' | '(' | ')' | '-' | '_' | '+' | '=' | '['
+        | ']' | '{' | '}' | ';' | ':' | '\'' | '"' | '\\' | '|' | ',' | '.' | '/' | '<' | '>'
+        | '?' | '`' | '~' => true,
+        _ => false,
+    }
 }

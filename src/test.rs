@@ -15,6 +15,7 @@ pub struct Translated {
 
 //#[axum_macros::debug_handler]
 pub async fn test_get(x: u8) -> impl IntoResponse {
+    println!("...test");
     let t = Translated {
         target_value: "".to_string(),
         target_hash: "".to_string(),

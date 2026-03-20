@@ -76,7 +76,7 @@ pub async fn xtrans(
         t.target_hash = at.clone().unwrap()[1].clone();
         t.msg = "mtranslated".to_string();
     } else {
-        println!("wait: {0}", wait);
+        println!("...wait: {0}", wait);
         let mut source_id = 0;
         let mut target_id = 0;
         let sr = get_id(&pool, &t.source_lang, &t.source_hash).await;
@@ -84,6 +84,7 @@ pub async fn xtrans(
             source_id = sr.unwrap()[0].parse().unwrap();
         }
 
+        println!("...wait: {:?}", &t.source_value);
         let gr = google_translate(&t.source_lang, &t.target_lang, &t.source_value, wait).await;
         if gr.is_some() {
             t.target_value = gr.clone().unwrap()[0].to_string();
