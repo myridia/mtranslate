@@ -85,6 +85,10 @@ fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wai
             } else {
                 new_text = format!("{0}", x.target_value);
             }
+
+            if _old_text.starts_with(" ") {
+                new_text = format!(" {0}", new_text);
+            }
         }
 
         text_node.replace(new_text);
