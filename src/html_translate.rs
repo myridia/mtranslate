@@ -81,7 +81,7 @@ fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wai
             if _old_text.ends_with(" ") && _old_text.starts_with(" ") {
                 new_text = format!(" {0} ", x.target_value);
             } else if _old_text.ends_with(" ") {
-                new_text = format!("{0}", x.target_value);
+                new_text = format!("{0} ", x.target_value);
             } else if _old_text.starts_with(" ") {
                 new_text = format!(" {0}", x.target_value);
             } else {
