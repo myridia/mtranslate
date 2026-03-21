@@ -73,25 +73,29 @@ fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wai
     for text_node in document.descendants().text_nodes() {
         let _old_text = text_node.borrow().to_string();
         let old_text = _old_text.trim().to_string();
-
-        //println!("{}", old_text.len());
         let mut new_text = old_text.clone();
         //println!("{}", is_numeric_and_symbols(&old_text));
         if old_text.len() > 3 && is_numeric_and_symbols(&old_text) == false {
             let rt = tokio::runtime::Runtime::new().unwrap();
             let x = rt.block_on(xtrans(&pool, source_lang, target_lang, &old_text, wait));
-            if _old_text.ends_with(" ") {
-                new_text = format!("{0} ", x.target_value);
+            if _old_text.ends_with(" ") && _old_text.starts_with(" ") {
+                new_text = format!(" {0} ", x.target_value);
+            } else if _old_text.ends_with(" ") {
+                new_text = format!("{0}", x.target_value);
+            } else if _old_text.starts_with(" ") {
+                new_text = format!(" {0}", x.target_value);
             } else {
                 new_text = format!("{0}", x.target_value);
             }
-
-            if _old_text.starts_with(" ") {
-                new_text = format!(" {0}", new_text);
-            }
+            text_node.replace(new_text);
+        } else {
+            text_node.replace(" ".to_string());
+            //println!("xxxxxxxxxxxxxxxx");
+            //println!("{}", old_text.len());
+            //println!("aaaa{}bbbb", old_text);
+            //println!("xxxxxxxxxxxxxxxx");
         }
 
-        text_node.replace(new_text);
         has_textnode = true;
     }
 
