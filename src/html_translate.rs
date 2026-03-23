@@ -120,7 +120,9 @@ fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wai
                     new_text = format!("{0}", x.target_value);
                 }
             } else {
-                new_text = " ".to_string();
+                if old_text.len() == 0 {
+                    new_text = " ".to_string();
+                }
             }
         }
         text_node.replace(new_text);
