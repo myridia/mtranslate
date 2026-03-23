@@ -124,6 +124,16 @@ fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wai
                     new_text = " ".to_string();
                 }
             }
+            
+        } else {
+            if old_text.len() == 0 {
+                new_text = " ".to_string();      
+            }
+            //text_node.replace(" ".to_string());
+            //println!("xxxxxxxxxxxxxxxx");
+            //println!("{}", old_text.len());
+            //println!("aaaa{}bbbb", old_text);
+            //println!("xxxxxxxxxxxxxxxx");
         }
         text_node.replace(new_text);
         has_textnode = true;
