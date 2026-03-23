@@ -2,8 +2,9 @@ use crate::config::AppConfig;
 use crate::translate::xtrans;
 
 use axum::{Json, extract, response::IntoResponse};
-use kuchiki::parse_html;
+//use kuchiki::parse_html;
 use kuchiki::traits::*;
+use kuchiki::*;
 use mysql::*;
 use random_number::random;
 use serde::{Deserialize, Serialize};
@@ -62,6 +63,34 @@ pub async fn html(
     t.target_value = target_value;
     Json(t)
 }
+fn get_class_names(n: NodeRef) -> Option<String> {
+    n.as_element()
+        .and_then(|elem| elem.attributes.borrow().get("class").map(|s| s.to_string()))
+}
+
+fn has_notranslate(n: NodeRef) -> bool {
+    // check first node
+    let _c = get_class_names(n.clone());
+    if !_c.is_none() {
+        let c = _c.unwrap();
+        if c.contains("notranslate") == true {
+            return true;
+        }
+    }
+
+    // check ancestors;
+    let a = n.ancestors();
+    for i in a {
+        let _class = get_class_names(i.clone());
+        if !_class.is_none() {
+            let class = _class.unwrap();
+            if class.contains("notranslate") == true {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wait: u64) -> String {
     //println!("{}", html);
@@ -74,18 +103,26 @@ fn translatex(pool: &Pool, source_lang: &str, target_lang: &str, html: &str, wai
         let _old_text = text_node.borrow().to_string();
         let old_text = _old_text.trim().to_string();
         let mut new_text = old_text.clone();
-        //println!("{}", is_numeric_and_symbols(&old_text));
-        if old_text.len() > 3 && is_numeric_and_symbols(&old_text) == false {
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            let x = rt.block_on(xtrans(&pool, source_lang, target_lang, &old_text, wait));
-            if _old_text.ends_with(" ") && _old_text.starts_with(" ") {
-                new_text = format!(" {0} ", x.target_value);
-            } else if _old_text.ends_with(" ") {
-                new_text = format!("{0} ", x.target_value);
-            } else if _old_text.starts_with(" ") {
-                new_text = format!(" {0}", x.target_value);
+
+        let is_nontranslate = has_notranslate(text_node.as_node().parent().unwrap().clone());
+
+        if is_nontranslate == false {
+            if old_text.len() > 2 && is_numeric_and_symbols(&old_text) == false {
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                let x = rt.block_on(xtrans(&pool, source_lang, target_lang, &old_text, wait));
+                if _old_text.ends_with(" ") && _old_text.starts_with(" ") {
+                    new_text = format!(" {0} ", x.target_value);
+                } else if _old_text.ends_with(" ") {
+                    new_text = format!("{0} ", x.target_value);
+                } else if _old_text.starts_with(" ") {
+                    new_text = format!(" {0}", x.target_value);
+                } else {
+                    new_text = format!("{0}", x.target_value);
+                }
             } else {
-                new_text = format!("{0}", x.target_value);
+                if old_text.len() == 0 {
+                    new_text = " ".to_string();
+                }
             }
             
         } else {
