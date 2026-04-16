@@ -17,21 +17,23 @@ pub async fn help() -> impl IntoResponse {
 
 pub async fn ftl() -> impl IntoResponse {
     // http://127.0.0.1:8889/ftl
+    let ftl: Vec<&str> = env!("ftl").split(',').collect();
     let r = serde_json::json!(
         {
             "api": "ftl",
-            "ftl": env!("ftl"),
+            "ftl": ftl,
         }
     );
     Json(r)
 }
 
 pub async fn codes() -> impl IntoResponse {
-    // http://127.0.0.1:8889/ftl
+    // http://127.0.0.1:8889/codes
+    let codes: Vec<&str> = env!("codes").split(',').collect();
     let r = serde_json::json!(
         {
             "api": "codes",
-            "codes": env!("codes"),
+            "codes": codes,
 
         }
     );
