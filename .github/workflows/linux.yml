@@ -19,7 +19,7 @@ jobs:
     if: github.repository_owner == 'myridia'
     runs-on: ubuntu-latest  
     steps:
-      - name: Install Dependencies
+      - name: Dependencies
         run: |
          sudo apt-get update -y
          sudo apt-get upgrade -y
@@ -28,31 +28,24 @@ jobs:
          source $HOME/.cargo/env
          cargo --version
          
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: list_targets
+  
+      - name: Compile
         run: |
-          rustup target list
-
-      - name: add_targets
-        run: |
-          rustup target add x86_64-unknown-linux-gnu
-
-      - name: compile linux
-        run: |
-          cargo build --target x86_64-unknown-linux-gnu --release 
- 
+          source $HOME/.cargo/env          
+          cargo build --release 
           
-      - name: rename binaries 
+      - name: Rename 
         run: |
-          cp target/x86_64-unknown-linux-gnu/release/mtranslate target/x86_64-unknown-linux-gnu/release/mtranslate_linux
-
-      - name: Upload Linux Binary to release
+          cp target/release/ct target/release/mtranslate_linux
+      - name: Release
+        if: github.repository_owner == 'myridia'                  
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: 'target/x86_64-unknown-linux-gnu/release/mtranslate_linux'
+          file: 'target/release/mtranslate_linux'
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
