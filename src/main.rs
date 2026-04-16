@@ -1,11 +1,11 @@
 use axum::{
-    Router,
     http::{HeaderValue, Method},
     routing::{get, post},
+    Router,
 };
 
 use libs::config::get_config;
-use libs::help::help;
+use libs::help::{codes, ftl, help};
 use libs::html_translate::*;
 use libs::test::test_get;
 use libs::translate::translate;
@@ -32,6 +32,8 @@ async fn main() {
         .route("/", get(move |p| translate(config, p)))
         .route("/", post(move |p| html(config2, p)))
         .route("/help", get(help))
+        .route("/ftl", get(ftl))
+        .route("/codes", get(codes))
         .route("/test", get(move || test_get(x)))
         .layer(cors)
         .layer(CorsLayer::permissive());
