@@ -1,7 +1,7 @@
 use axum::{
+    Router,
     http::{HeaderValue, Method},
     routing::{get, post},
-    Router,
 };
 
 use libs::config::get_config;
