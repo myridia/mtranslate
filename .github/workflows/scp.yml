@@ -2,7 +2,7 @@ name: deploy_scp
 
 on:
   workflow_run:
-    workflows: ["release_linux"]
+    workflows: ["linux"]
     types:
       - completed
   workflow_dispatch:
