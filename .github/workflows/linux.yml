@@ -1,0 +1,67 @@
+name: linux
+
+on:
+  push:
+    branches: ["main"]
+    tags:
+      - '*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write 
+  issues: read
+  packages: none
+
+jobs:
+  # Single deploy job since we're just deploying
+  build_linux:
+    if: github.repository_owner == 'myridia'
+    runs-on: ubuntu-latest  
+    steps:
+      - name: Dependencies
+        run: |
+         sudo apt-get update -y
+         sudo apt-get upgrade -y
+         sudo apt-get install curl build-essential gcc make  -y          
+         curl https://sh.rustup.rs -sSf | sh -s -- -y
+         source $HOME/.cargo/env
+         cargo --version
+         
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Compile
+        run: |
+          source $HOME/.cargo/env          
+          cargo build --release 
+          
+      - name: Rename 
+        run: |
+          cp target/release/mtranslate target/release/mtranslate_linux
+          
+      - name: Release
+        if: github.repository_owner == 'myridia'                  
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: 'target/release/mtranslate_linux'
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
+
+
+
+
+    
+   
+
+
+        
+
+
+        
+
+
+ 
+     
