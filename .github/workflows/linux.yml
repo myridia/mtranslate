@@ -30,8 +30,7 @@ jobs:
          
       - name: Checkout
         uses: actions/checkout@v4
-
-  
+        
       - name: Compile
         run: |
           source $HOME/.cargo/env          
@@ -39,7 +38,8 @@ jobs:
           
       - name: Rename 
         run: |
-          cp target/release/ct target/release/mtranslate_linux
+          cp target/release/mtranslate target/release/mtranslate_linux
+          
       - name: Release
         if: github.repository_owner == 'myridia'                  
         uses: svenstaro/upload-release-action@v2
