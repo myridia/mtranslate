@@ -174,13 +174,28 @@ pub async fn translate(
 
     Json(t)
 }
-
-pub async fn hash8(s: &str) -> String {
+/*
+async fn _hash8(s: &str) -> String {
     let result = Sha256::digest(s);
     let x = format!("{:x}", result).to_string();
     let _hash = &x.get(x.len() - 8..);
     let hash = _hash.unwrap_or_default().to_string();
     return hash;
+}
+*/
+async fn hash8(s: &str) -> String {
+    let result = Sha256::digest(s);
+    let full_hash: String = result
+        .iter()
+        .map(|byte| format!("{:02x}", byte))
+        .collect::<String>();
+
+    let hash = if full_hash.len() >= 8 {
+        full_hash[(full_hash.len() - 8)..].to_string()
+    } else {
+        full_hash
+    };
+    hash
 }
 
 pub async fn get_id(pool: &Pool, name: &str, hash: &str) -> Option<Vec<String>> {
