@@ -17,23 +17,23 @@ pub async fn help() -> impl IntoResponse {
 
 pub async fn ftl() -> impl IntoResponse {
     // http://127.0.0.1:8889/ftl
-    let r = serde_json::json!([
+    let r = serde_json::json!(
         {
             "api": "ftl",
             "ftl": env!("ftl"),
         }
-    ]);
+    );
     Json(r)
 }
 
 pub async fn codes() -> impl IntoResponse {
     // http://127.0.0.1:8889/ftl
-    let r = serde_json::json!([
+    let r = serde_json::json!(
         {
             "api": "codes",
             "codes": env!("codes"),
 
         }
-    ]);
+    );
     Json(r)
 }
