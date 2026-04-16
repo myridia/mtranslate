@@ -1,4 +1,4 @@
-use axum::{response::IntoResponse, Json};
+use axum::{Json, response::IntoResponse};
 
 pub async fn help() -> impl IntoResponse {
     // http://127.0.0.1:8889/help
@@ -16,8 +16,7 @@ pub async fn help() -> impl IntoResponse {
 }
 
 pub async fn ftl() -> impl IntoResponse {
-    // http://127.0.0.1:8889/help
-    let h: String = hostname::get().unwrap().into_string().unwrap();
+    // http://127.0.0.1:8889/ftl
     let r = serde_json::json!([
         {
             "api": "ftl",
@@ -28,8 +27,7 @@ pub async fn ftl() -> impl IntoResponse {
 }
 
 pub async fn codes() -> impl IntoResponse {
-    // http://127.0.0.1:8889/help
-    let h: String = hostname::get().unwrap().into_string().unwrap();
+    // http://127.0.0.1:8889/ftl
     let r = serde_json::json!([
         {
             "api": "codes",
