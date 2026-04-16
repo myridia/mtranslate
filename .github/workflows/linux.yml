@@ -1,4 +1,4 @@
-name: release_linux
+name: linux
 
 on:
   push:
@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Install Dependencies
         run: |
+         sudo apt-get update -y
+         suodo apt-get upgrade -y
          sudo apt-get install curl build-essential gcc make  -y
          sudo apt-get install rustc cargo gzip -y
          sudo apt-get install g++ zlib1g-dev libmpc-dev libmpfr-dev  libgmp-dev
