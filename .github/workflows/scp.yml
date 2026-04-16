@@ -1,15 +1,15 @@
-name: deploy_scp
+name: Scp
 
 on:
   workflow_run:
-    workflows: ["release_linux"]
+    workflows: ["linux"]
     types:
       - completed
   workflow_dispatch:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'myridia'
+    if: github.repository_owner == 'myridiax'
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
