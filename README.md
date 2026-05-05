@@ -1,4 +1,4 @@
-# ![email_gateway](pages/public/img/icon_192x192.png) mtranslate
+# ![mtranslate](pages/public/img/icon_192x192.png) mtranslate
 * Myridia's online translator service
 
 ### Usage 
