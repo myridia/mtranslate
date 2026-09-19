@@ -31,15 +31,21 @@ source_hash, request_hash, source_value, msg }`.
 - Latin-script sources: translit empty (no romanization from Google) — JSON
   field present but blank.
 
-### 3. new `/sound` endpoint — Google TTS audio (per-word mp3)
-- `GET /sound?s=<lang>&v=<word>` → `audio/mpeg` (Google TTS, NOT synthetic —
-  port `gTTS` from berg/Spelltrainer: `client=tw-ob`, computed `tk` token,
-  `slow=true` → `ttsspeed=0.24`).
-- Request: `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q=<word>&tl=<lang>&ttsspeed=0.24`.
-- Cache mp3 on disk: `cache/<lang>/<hash8(word)>.mp3` (reuse existing `hash8`),
-  hit-check before re-fetching Google.
+### 3. new `/sound` endpoint — per-word mp3 (Google TTS, cached in spoken dictionaries)
+- `GET /sound?s=<lang>&v=<word>` → `audio/mpeg` **or** redirect to the CDN mp3.
+- **CDN first**: check the spoken-dictionary repo on GitHub Pages first —
+  `https://myridia.github.io/spoken_dict_<lang>/sounds/<lang>/<word>.mp3`
+  (filename = the word, URL-encoded). If that mp3 exists, serve/redirect it.
+  Reference: `github/myridia/spoken_dict_th` (40,679 words, `sounds/th/<word>.mp3`,
+  `words.txt` index). Create a `spoken_dict_<lang>` repo per language.
+- **Google only on miss**: if the CDN returns 404, fetch from
+  `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q=<word>&tl=<lang>&ttsspeed=0.24`
+  (port `gTTS` from berg/Spelltrainer: `client=tw-ob`, computed `tk` token,
+  `slow=true` → `ttsspeed=0.24`), then add the mp3 to the language's spoken-dictionary
+  repo (so Google is NOT hit again for that word). Also cache locally on disk:
+  `cache/<lang>/<word>.mp3` (same scheme as the CDN, reuse `hash8` for the local key).
 - Same politeness as the translator: exist-check + random wait
-  (`wait_min`/`wait_max`) before hitting Google.
+  (`wait_min`/`wait_max`) when actually calling Google.
 
 ## Depends on
 - spelltrainer.com plan/Roadmap: Read section consumes translation + translit
