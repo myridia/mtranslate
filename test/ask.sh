@@ -3,7 +3,7 @@ DB_USER=dbsql1
 DB_PASSWORD=passpass
 
 
-echo -e "I'm ask.sh. What you like to do?, enter a Task Id from list below: \n"
+echo -e "I'm ask.sh. What would you like to do? Enter a Task ID from the list below: \n"
 echo -e "TaskID\t Description"
 echo -e "1\t Test loal"
 echo -e "2\t Post local"
