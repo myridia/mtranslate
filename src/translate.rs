@@ -1,9 +1,9 @@
 use crate::config::AppConfig;
 use axum::{Json, extract::Query, response::IntoResponse};
-use deeptrans::{Engine, Translator};
 use mysql::prelude::*;
 use mysql::*;
 use random_number::random;
+use reqwest::Client;
 use sanitize_html::rules::predefined::DEFAULT;
 use sanitize_html::sanitize_str;
 use serde::Serialize;
@@ -281,16 +281,56 @@ pub async fn google_translate(
     //println!("...fn google_translate");
     let mut v: Vec<String> = vec![];
     sleep(Duration::from_millis(wait)).await;
-    let trans = Translator::with_engine(source_lang, target_lang, Engine::Google);
-    let r = trans.translate(source_value).await;
-    if r.is_ok() {
-        let value = r.unwrap().as_str().unwrap_or_default().to_string();
-        let hash = hash8(&value).await;
-        v.push(value);
-        v.push(hash);
-        return Some(v);
+    let url = format!(
+        "https://translate.googleapis.com/translate_a/single?client=dict-chrome-ex&sl={0}&tl={1}&dt=t&q={2}",
+        source_lang, target_lang, source_value
+    );
+    let client = Client::builder()
+        .user_agent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
+        .timeout(Duration::from_secs(15))
+        .build()
+        .expect("failed to build http client");
+    match client.get(&url).send().await {
+        Ok(resp) => {
+            if resp.status().is_server_error() {
+                println!("...google_translate HTTP error: {}", resp.status());
+                return None;
+            }
+            let body = resp.text().await.unwrap_or_default();
+            let data: serde_json::Value = match serde_json::from_str(&body) {
+                Ok(d) => d,
+                Err(e) => {
+                    println!("...google_translate JSON parse failed: {e}");
+                    println!("...body (first 200): {}", &body[..body.len().min(200)]);
+                    return None;
+                }
+            };
+            let segs = data.get(0).and_then(|x| x.as_array());
+            let mut value: String = "".to_string();
+            if let Some(segs) = segs {
+                for seg in segs {
+                    if let Some(parts) = seg.as_array() {
+                        if let Some(s) = parts.first().and_then(|x| x.as_str()) {
+                            value += s;
+                        }
+                    }
+                }
+            }
+            let value = value.trim().to_string();
+            if value.is_empty() {
+                println!("...google_translate empty result for: {source_value}");
+                return None;
+            }
+            let hash = hash8(&value).await;
+            v.push(value);
+            v.push(hash);
+            Some(v)
+        }
+        Err(e) => {
+            println!("...google_translate request error: {e}");
+            None
+        }
     }
-    return None;
 }
 
 pub async fn insert_lang(pool: &Pool, lang: &str, value: &str, hash: &str) -> Option<u64> {

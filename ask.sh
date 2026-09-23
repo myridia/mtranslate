@@ -13,6 +13,7 @@ echo -e "5\t Export Db - Export the database on the docker/test server"
 echo -e "6\t Test html text via curl LOCAL"
 echo -e "7\t Test html text via curl ONLINE "
 echo -e "8\t Test plain text via curl "
+echo -e "9\t Clean Local Tables - TRUNCATE all tables in the docker db"
 
 
 
@@ -71,6 +72,16 @@ elif [ "$task" = "7" ]; then
 elif [ "$task" = "8" ]; then
     echo "...${task}"
     curl -X GET 'http://0.0.0.0:8089?s=en&t=th&v=hello'
+
+elif [ "$task" = "9" ]; then
+    echo "...${task}"
+    ellipsis
+    TABLES=$(docker exec -i db mariadb -u "${DB_NAME}" -p"${DB_PASSWORD}" "${DB_NAME}" -N -e \
+      "SELECT table_name FROM information_schema.tables WHERE table_schema = '${DB_NAME}';")
+    for t in ${TABLES}; do
+        docker exec -i db mariadb -u "${DB_NAME}" -p"${DB_PASSWORD}" "${DB_NAME}" \
+          -e "SET FOREIGN_KEY_CHECKS=0; TRUNCATE TABLE \`${t}\`;"
+    done
 
     
 else
